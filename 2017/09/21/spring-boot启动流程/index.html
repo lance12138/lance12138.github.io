@@ -79,18 +79,20 @@
 
 
 
-<meta name="description" content="引言早在15年的时候就开始用spring boot进行开发了，然而一直就只是用用，并没有深入去了解spring boot是以什么原理怎样工作的，说来也惭愧。今天让我们从spring boot启动开始，深入了解一下spring boot的工作原理。 为什么用spring boot在使用一个东西或者一个工具之前，我们总是会问自己，我为什么要用？用他能给我带来什么好处？  最大的好处就是spring b">
+<meta name="description" content="引言早在15年的时候就开始用spring boot进行开发了，然而一直就只是用用，并没有深入去了解spring boot是以什么原理怎样工作的，说来也惭愧。今天让我们从spring boot启动开始，深入了解一下spring boot的工作原理。">
 <meta name="keywords" content="spring boot,源码分析">
 <meta property="og:type" content="article">
 <meta property="og:title" content="spring boot启动流程">
 <meta property="og:url" content="http://yoursite.com/2017/09/21/spring-boot启动流程/index.html">
 <meta property="og:site_name" content="知之’s Blog">
-<meta property="og:description" content="引言早在15年的时候就开始用spring boot进行开发了，然而一直就只是用用，并没有深入去了解spring boot是以什么原理怎样工作的，说来也惭愧。今天让我们从spring boot启动开始，深入了解一下spring boot的工作原理。 为什么用spring boot在使用一个东西或者一个工具之前，我们总是会问自己，我为什么要用？用他能给我带来什么好处？  最大的好处就是spring b">
+<meta property="og:description" content="引言早在15年的时候就开始用spring boot进行开发了，然而一直就只是用用，并没有深入去了解spring boot是以什么原理怎样工作的，说来也惭愧。今天让我们从spring boot启动开始，深入了解一下spring boot的工作原理。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2017-12-03T05:36:10.655Z">
+<meta property="og:image" content="http://yoursite.com/images/springboot.png">
+<meta property="og:updated_time" content="2018-01-14T14:19:08.218Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="spring boot启动流程">
-<meta name="twitter:description" content="引言早在15年的时候就开始用spring boot进行开发了，然而一直就只是用用，并没有深入去了解spring boot是以什么原理怎样工作的，说来也惭愧。今天让我们从spring boot启动开始，深入了解一下spring boot的工作原理。 为什么用spring boot在使用一个东西或者一个工具之前，我们总是会问自己，我为什么要用？用他能给我带来什么好处？  最大的好处就是spring b">
+<meta name="twitter:description" content="引言早在15年的时候就开始用spring boot进行开发了，然而一直就只是用用，并没有深入去了解spring boot是以什么原理怎样工作的，说来也惭愧。今天让我们从spring boot启动开始，深入了解一下spring boot的工作原理。">
+<meta name="twitter:image" content="http://yoursite.com/images/springboot.png">
 
 
 
@@ -377,15 +379,24 @@
 
       
         <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>早在15年的时候就开始用spring boot进行开发了，然而一直就只是用用，并没有深入去了解spring boot是以什么原理怎样工作的，说来也惭愧。今天让我们从spring boot启动开始，深入了解一下spring boot的工作原理。</p>
+<p><img src="/images/springboot.png" alt="springboot"></p>
+<a id="more"></a>
 <h3 id="为什么用spring-boot"><a href="#为什么用spring-boot" class="headerlink" title="为什么用spring boot"></a>为什么用spring boot</h3><p>在使用一个东西或者一个工具之前，我们总是会问自己，我为什么要用？用他能给我带来什么好处？</p>
 <ul>
-<li>最大的好处就是spring boot遵从了java<strong>约定大于配置</strong>不用面对一大堆的配置文件，spring boot是根据你用的包来决定提供什么配置。</li>
-<li>服务器以jar包的形式内嵌于项目中，对于微服务满天飞的情况，spring boot天生适合微服务架构，方便部署。</li>
-<li>提供devtools从此改代码就需重启成为历史。<a id="more"></a>
-有优点就一定有缺点，缺点来源于优点优点来源于缺点（感觉在说哲学问题了哈哈哈）</li>
-<li>正因为配置对开发者不透明，不看源码会不清楚spring boot如何进行诸如JDBC加载、事务管理等，出现错误也很难调错。</li>
-<li>自动配置之后要自定义配置需编码javaConfig，需要了解这些配置类api。</li>
-<li>版本迭代太快，新版本对老版本改动太多导致不兼容，比如1.3.5之前的springBootTest和1.4.0之后的springBootTest。</li>
+<li><p>最大的好处就是spring boot遵从了java<strong>约定大于配置</strong>不用面对一大堆的配置文件，spring boot是根据你用的包来决定提供什么配置。</p>
+</li>
+<li><p>服务器以jar包的形式内嵌于项目中，对于微服务满天飞的情况，spring boot天生适合微服务架构，方便部署。</p>
+</li>
+<li><p>提供devtools从此改代码就需重启成为历史。</p>
+<p>​</p>
+<p>有优点就一定有缺点，缺点来源于优点优点来源于缺点（感觉在说哲学问题了哈哈哈）</p>
+</li>
+<li><p>正因为配置对开发者不透明，不看源码会不清楚spring boot如何进行诸如JDBC加载、事务管理等，出现错误也很难调错。</p>
+</li>
+<li><p>自动配置之后要自定义配置需编码javaConfig，需要了解这些配置类api。</p>
+</li>
+<li><p>版本迭代太快，新版本对老版本改动太多导致不兼容，比如1.3.5之前的springBootTest和1.4.0之后的springBootTest。</p>
+</li>
 </ul>
 <p><strong>只有合适的架构才是最好的架构</strong>如果能接受spring boot这些缺点，spring boot确实是一个可以提高开发效率的不错的选择。</p>
 <h3 id="启动流程"><a href="#启动流程" class="headerlink" title="启动流程"></a>启动流程</h3><p>扯了这么多，该上正题了，让我们来看看spring boot是怎样启动和启动做了哪些事情。</p>
