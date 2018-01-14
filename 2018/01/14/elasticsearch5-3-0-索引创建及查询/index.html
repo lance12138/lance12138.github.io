@@ -79,16 +79,17 @@
 
 
 
-<meta name="description" content="聊技术，讲生活，发现技术生活的美好">
-<meta property="og:type" content="website">
-<meta property="og:title" content="知之’s Blog">
-<meta property="og:url" content="http://yoursite.com/archives/2017/09/index.html">
+<meta name="description" content="引言上篇文章介绍了elasticsearch5.3.0服务器搭建，接下来说说elasticsearch的java客户端对数据的索引创建和对数据的查询。虽说现在es的api使用文档不少，但是5.3.0版本的太新了，许多都不兼容老版本，所以有了这篇博文。elasticsearch允许HTTP Restful的方式进行数据访问和操作，也同样允许通过JAVA API来访问服务器，HTTP Restful方">
+<meta property="og:type" content="article">
+<meta property="og:title" content="elasticsearch5.3.0 索引创建及查询">
+<meta property="og:url" content="http://yoursite.com/2018/01/14/elasticsearch5-3-0-索引创建及查询/index.html">
 <meta property="og:site_name" content="知之’s Blog">
-<meta property="og:description" content="聊技术，讲生活，发现技术生活的美好">
+<meta property="og:description" content="引言上篇文章介绍了elasticsearch5.3.0服务器搭建，接下来说说elasticsearch的java客户端对数据的索引创建和对数据的查询。虽说现在es的api使用文档不少，但是5.3.0版本的太新了，许多都不兼容老版本，所以有了这篇博文。elasticsearch允许HTTP Restful的方式进行数据访问和操作，也同样允许通过JAVA API来访问服务器，HTTP Restful方">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-01-14T14:04:35.547Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="知之’s Blog">
-<meta name="twitter:description" content="聊技术，讲生活，发现技术生活的美好">
+<meta name="twitter:title" content="elasticsearch5.3.0 索引创建及查询">
+<meta name="twitter:description" content="引言上篇文章介绍了elasticsearch5.3.0服务器搭建，接下来说说elasticsearch的java客户端对数据的索引创建和对数据的查询。虽说现在es的api使用文档不少，但是5.3.0版本的太新了，许多都不兼容老版本，所以有了这篇博文。elasticsearch允许HTTP Restful的方式进行数据访问和操作，也同样允许通过JAVA API来访问服务器，HTTP Restful方">
 
 
 
@@ -118,13 +119,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/archives/2017/09/"/>
+  <link rel="canonical" href="http://yoursite.com/2018/01/14/elasticsearch5-3-0-索引创建及查询/"/>
 
 
 
 
 
-  <title>归档 | 知之’s Blog</title>
+  <title>elasticsearch5.3.0 索引创建及查询 | 知之’s Blog</title>
   
 
 
@@ -143,7 +144,7 @@
     
   
 
-  <div class="container sidebar-position-right page-archive">
+  <div class="container sidebar-position-right page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -251,74 +252,196 @@
           <div id="content" class="content">
             
 
+  <div id="posts" class="posts-expand">
+    
+
+  
+
   
   
   
-  <div class="post-block archive">
-    <div id="posts" class="posts-collapse">
-      <span class="archive-move-on"></span>
-
-      <span class="archive-page-counter">
-        
-        
-        
-          
-        
-        嗯..! 目前共计 15 篇日志。 继续努力。
-      </span>
-
-      
-
-        
-        
-        
-
-        
-          
-          <div class="collection-title">
-            <h1 class="archive-year" id="archive-year-2017">2017</h1>
-          </div>
-        
-        
-
-        
 
   <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/14/elasticsearch5-3-0-索引创建及查询/">
 
-      <h2 class="post-title">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="赖峣">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="知之’s Blog">
+    </span>
+
+    
+      <header class="post-header">
+
         
-            <a class="post-title-link" href="/2017/09/21/spring-boot启动流程/" itemprop="url">
-              
-                <span itemprop="name">spring boot启动流程</span>
-              
-            </a>
         
-      </h2>
+          <h1 class="post-title" itemprop="name headline">elasticsearch5.3.0 索引创建及查询</h1>
+        
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-09-21T21:50:54+08:00"
-              content="2017-09-21" >
-          09-21
-        </time>
-      </div>
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-14T22:00:07+08:00">
+                2018-01-14
+              </time>
+            
 
-    </header>
-  </article>
+            
 
+            
+          </span>
 
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2018/01/14/elasticsearch5-3-0-索引创建及查询/" class="leancloud_visitors" data-flag-title="elasticsearch5.3.0 索引创建及查询">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  1,044
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  5
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
+      
 
+      
+        <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>上篇文章介绍了elasticsearch5.3.0服务器搭建，接下来说说elasticsearch的java客户端对数据的索引创建和对数据的查询。虽说现在es的api使用文档不少，但是5.3.0版本的太新了，许多都不兼容老版本，所以有了这篇博文。elasticsearch允许HTTP Restful的方式进行数据访问和操作，也同样允许通过JAVA API来访问服务器，HTTP Restful方式官方网站有很详细的说明在这就不罗嗦了，先看如何使用JAVA API来访问服务器。</p>
+<a id="more"></a>
+<h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>本人使用springboot建的项目，本文重点是如何使用es的java api，其他有的没的就先略去。<br>首先引入elasticsearch客户端maven包,因为是5.3.0的版本，所以客户端包也保持一致。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">     &lt;groupId&gt;org.elasticsearch.client&lt;/groupId&gt;</span><br><span class="line">     &lt;artifactId&gt;transport&lt;/artifactId&gt;</span><br><span class="line">     &lt;version&gt;5.3.0&lt;/version&gt;</span><br><span class="line">   &lt;/dependency&gt;</span><br><span class="line">   &lt;dependency&gt;</span><br><span class="line">     &lt;groupId&gt;org.elasticsearch&lt;/groupId&gt;</span><br><span class="line">     &lt;artifactId&gt;elasticsearch&lt;/artifactId&gt;</span><br><span class="line">     &lt;version&gt;5.3.0&lt;/version&gt;</span><br><span class="line">   &lt;/dependency&gt;</span><br></pre></td></tr></table></figure></p>
+<h3 id="索引创建及查询"><a href="#索引创建及查询" class="headerlink" title="索引创建及查询"></a>索引创建及查询</h3><h4 id="Client"><a href="#Client" class="headerlink" title="Client"></a>Client</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Bean</span><br><span class="line">public Client esClient()throws UnknownHostException &#123;</span><br><span class="line">    Settings settings=Settings.builder()</span><br><span class="line">            .put(&quot;cluster.name&quot;,clusterName)//集群名称</span><br><span class="line">            .put(&quot;client.transport.sniff&quot;,true)//是否开启嗅探功能</span><br><span class="line">            .build();</span><br><span class="line">    InetAddress inetAddress=InetAddress.getByName(ip);</span><br><span class="line">    TransportAddress transportAddress =new InetSocketTransportAddress(inetAddress,port);</span><br><span class="line">    return new PreBuiltTransportClient(settings)</span><br><span class="line">            .addTransportAddress(transportAddress);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="创建索引"><a href="#创建索引" class="headerlink" title="创建索引"></a>创建索引</h4><p>对于es的文档而言，一个文档会包括一个或者多个字段，任何字段都要有自己的数据类型，比如string、date等。es中是通过映射来进行字段和数据类型对应的，在默认的情况下es会自动识别字段的数据类型，但是最好还是提供一个mappings参数类显式的进行映射。</p>
+<p>接下来我们先给要索引的数据创建一个mapping</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">public boolean getMapping(String index, String type) &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">        CreateIndexRequest createIndexRequest = new CreateIndexRequest(index);</span><br><span class="line">        CreateIndexResponse createIndexResponse = esClient.admin().indices().create(createIndexRequest).get();</span><br><span class="line">        logger.info(&quot;Index:&#123;&#125; created,response:&#123;&#125;&quot;, index, JSON.toJSON(createIndexResponse));</span><br><span class="line"></span><br><span class="line">        XContentBuilder builder = XContentFactory.jsonBuilder();</span><br><span class="line">        builder.startObject()</span><br><span class="line">                .startObject(type)</span><br><span class="line">                .startObject(&quot;properties&quot;)</span><br><span class="line">                .startObject(&quot;firstName&quot;).field(&quot;type&quot;, &quot;string&quot;)</span><br><span class="line">                .endObject()</span><br><span class="line">                .startObject(&quot;lastName&quot;).field(&quot;type&quot;, &quot;string&quot;)</span><br><span class="line">                .endObject()</span><br><span class="line">                .startObject(&quot;about&quot;).field(&quot;type&quot;, &quot;string&quot;)</span><br><span class="line">                .endObject()</span><br><span class="line">                .startObject(&quot;interests&quot;).field(&quot;type&quot;, &quot;string&quot;)</span><br><span class="line">                .endObject()</span><br><span class="line">                .endObject()</span><br><span class="line">                .endObject();</span><br><span class="line">        PutMappingRequest putMappingRequest = new PutMappingRequest(index);</span><br><span class="line">        putMappingRequest.type(type);</span><br><span class="line">        putMappingRequest.source(builder);</span><br><span class="line">        PutMappingResponse putMappingResponse = esClient.admin().indices().putMapping(putMappingRequest).get();</span><br><span class="line">        logger.info(&quot;Mapping for `&#123;&#125;.&#123;&#125;` putted, response:&#123;&#125;&quot;, index, type, JSON.toJSON(putMappingResponse));</span><br><span class="line"></span><br><span class="line">        return true;</span><br><span class="line">    &#125; catch (Exception e) &#123;</span><br><span class="line">        logger.error(&quot;doCreateIndex&quot;, e);</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>测试数据是官网上的一个例子，就是一个公司部门中员工的信息，而mapping的作用就是在es中被索引的数据规定每一个field数据类型。</p>
+<p>接下来添加索引数据：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public boolean createIndex(String json) &#123;</span><br><span class="line">    </span><br><span class="line">    try &#123;</span><br><span class="line">        if(!esIndexTypes.get(index)) &#123;</span><br><span class="line">            if(getMapping(index, indexType)) esIndexTypes.put(index,true);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        IndexRequestBuilder requestBuilder = esClient.prepareIndex(index, indexType);</span><br><span class="line">        IndexResponse indexResponse = requestBuilder.setSource(json).execute().actionGet();</span><br><span class="line">        logger.info(&quot;Index:&#123;&#125; created,response:&#123;&#125;&quot;, index, JSON.toJSON(indexResponse));</span><br><span class="line">        return true;</span><br><span class="line">    &#125; catch (Exception e) &#123;</span><br><span class="line">        logger.error(&quot;createIndex failed,exception:&#123;&#125;&quot;, e.getMessage());</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="组合查询并高亮显示"><a href="#组合查询并高亮显示" class="headerlink" title="组合查询并高亮显示"></a>组合查询并高亮显示</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">public List&lt;String&gt; search(String... queryStr) &#123;</span><br><span class="line">       BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();</span><br><span class="line">       for (String s : queryStr) &#123;//使用queryStringQuery无法使用高亮</span><br><span class="line">           queryBuilder.should(QueryBuilders.matchQuery(&quot;about&quot;, s));</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       HighlightBuilder highlightBuilder = new HighlightBuilder();</span><br><span class="line">       highlightBuilder.preTags(&quot;&lt;span style=\&quot;color:red\&quot;&gt;&quot;);</span><br><span class="line">       highlightBuilder.postTags(&quot;&lt;/span&gt;&quot;);</span><br><span class="line">       highlightBuilder.field(&quot;about&quot;).field(&quot;interests&quot;).forceSource(true);</span><br><span class="line">       SearchResponse searchResponse = esClient.prepareSearch(index)</span><br><span class="line">               .setTypes(indexType)</span><br><span class="line">               .setQuery(queryBuilder)</span><br><span class="line">               .highlighter(highlightBuilder)</span><br><span class="line">               .execute()</span><br><span class="line">               .actionGet();</span><br><span class="line">       SearchHits hits = searchResponse.getHits();</span><br><span class="line">       List&lt;String&gt; list = new ArrayList&lt;String&gt;();</span><br><span class="line">       if (hits != null &amp;&amp; hits.getHits().length &gt; 0) &#123;</span><br><span class="line">           for (SearchHit hit : hits) &#123;</span><br><span class="line">               JSONObject data = new JSONObject();</span><br><span class="line">               for(Map.Entry&lt;String, Object&gt; entry : hit.getSource().entrySet()) &#123;</span><br><span class="line">                  data.put(entry.getKey(), entry.getValue());</span><br><span class="line">              &#125;</span><br><span class="line">               hit.getHighlightFields().forEach((title, frag) -&gt; &#123;</span><br><span class="line">                   String str = &quot;&quot;;</span><br><span class="line">                   for (Text text : frag.getFragments()) &#123;</span><br><span class="line">                       str = str + text.string();</span><br><span class="line">                   &#125;</span><br><span class="line">                   data.put(title, str);</span><br><span class="line">               &#125;);</span><br><span class="line"></span><br><span class="line">               list.add(JSON.toJSONString(data));</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       return list;</span><br><span class="line"></span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@org.junit.Test</span><br><span class="line">    public void testquery()&#123;</span><br><span class="line">        List&lt;String&gt; haha = esProxy.search(&quot;认真&quot;,&quot;眼泪&quot;,&quot;杀猪&quot;);</span><br><span class="line">        System.out.println(haha.toString());</span><br><span class="line">    &#125;</span><br><span class="line">    //结果</span><br><span class="line">    [&#123;&quot;firstName&quot;:&quot;王麻子&quot;,&quot;lastName&quot;:&quot;君君&quot;,&quot;about&quot;:&quot;爱的那么&lt;span style=\&quot;color:red\&quot;&gt;认&lt;/span&gt;&lt;span style=\&quot;color:red\&quot;&gt;真&lt;/span&gt;，不让我的&lt;span style=\&quot;color:red\&quot;&gt;眼&lt;/span&gt;&lt;span style=\&quot;color:red\&quot;&gt;泪&lt;/span&gt;陪我过夜&quot;,&quot;interests&quot;:[&quot;怼人，我是在等待发呆，笨小孩&quot;,&quot;杀猪&quot;,&quot;打豆豆&quot;],&quot;age&quot;:18&#125;, &#123;&quot;firstName&quot;:&quot;王把&quot;,&quot;lastName&quot;:&quot;君君&quot;,&quot;about&quot;:&quot;中华人民共和国体育总局，不让我的&lt;span style=\&quot;color:red\&quot;&gt;眼&lt;/span&gt;&lt;span style=\&quot;color:red\&quot;&gt;泪&lt;/span&gt;陪我过夜&quot;,&quot;interests&quot;:[&quot;怼人，我是在等待发呆，笨小孩&quot;,&quot;杀猪&quot;,&quot;打豆豆&quot;],&quot;age&quot;:18&#125;]</span><br></pre></td></tr></table></figure>
+      
     </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/01/14/elasticsearch实现中文分词和拼音分词混合查询-CompletionSuggestion/" rel="next" title="elasticsearch实现中文分词和拼音分词混合查询+CompletionSuggestion">
+                <i class="fa fa-chevron-left"></i> elasticsearch实现中文分词和拼音分词混合查询+CompletionSuggestion
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/01/14/深入理解dubbo之服务发布源码分析/" rel="prev" title="深入理解dubbo之服务发布源码分析">
+                深入理解dubbo之服务发布源码分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </div>
   
   
   
+  </article>
 
-  
 
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -326,6 +449,10 @@
 
 
           
+
+  
+
+
 
         </div>
         
@@ -346,8 +473,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -412,6 +548,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#引言"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#准备"><span class="nav-number">2.</span> <span class="nav-text">准备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#索引创建及查询"><span class="nav-number">3.</span> <span class="nav-text">索引创建及查询</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Client"><span class="nav-number">3.1.</span> <span class="nav-text">Client</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#创建索引"><span class="nav-number">3.2.</span> <span class="nav-text">创建索引</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#组合查询并高亮显示"><span class="nav-number">4.</span> <span class="nav-text">组合查询并高亮显示</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试"><span class="nav-number">5.</span> <span class="nav-text">测试</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -656,6 +808,10 @@ $(function() {
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 

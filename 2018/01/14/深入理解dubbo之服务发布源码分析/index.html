@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="volatile,多线程," />
+  <meta name="keywords" content="Hexo, NexT" />
 
 
 
@@ -79,21 +79,17 @@
 
 
 
-<meta name="description" content="引言对于java开发同学来说，说到多线程首先想到的就是队列、synchronized、lock等等，就这几个东西就够说好几个文章的篇幅了，今天我们主角并不是它们，而是并不太受欢迎的volatile。很多开发同学可能一碰到多线程变量共享问题直接上锁，当然这样做也是无可以厚非，毕竟木有用错，只能说这样编码不是那么的优雅，如果说能使用锁和volatile配合使用无论对性能也好还是对java语言的理解也">
-<meta name="keywords" content="volatile,多线程">
+<meta name="description" content="dubbo 是阿里开源的一个分布式服务框架，它的最大特点是按照分层的方式来架构，使各层之间充分解耦，并且它是无侵入性的，dubbo可以无缝与spring整合，更重要的是dubbo还提供了强大的容错和监控功能。 对于业务方来说，dubbo使用上手足够简单，调用过程对业务方透明，对开发人员友好。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="java中如何正确使用volatile">
-<meta property="og:url" content="http://yoursite.com/2017/04/16/java中如何正确使用volatile/index.html">
+<meta property="og:title" content="深入理解dubbo之服务发布源码分析">
+<meta property="og:url" content="http://yoursite.com/2018/01/14/深入理解dubbo之服务发布源码分析/index.html">
 <meta property="og:site_name" content="知之’s Blog">
-<meta property="og:description" content="引言对于java开发同学来说，说到多线程首先想到的就是队列、synchronized、lock等等，就这几个东西就够说好几个文章的篇幅了，今天我们主角并不是它们，而是并不太受欢迎的volatile。很多开发同学可能一碰到多线程变量共享问题直接上锁，当然这样做也是无可以厚非，毕竟木有用错，只能说这样编码不是那么的优雅，如果说能使用锁和volatile配合使用无论对性能也好还是对java语言的理解也">
+<meta property="og:description" content="dubbo 是阿里开源的一个分布式服务框架，它的最大特点是按照分层的方式来架构，使各层之间充分解耦，并且它是无侵入性的，dubbo可以无缝与spring整合，更重要的是dubbo还提供了强大的容错和监控功能。 对于业务方来说，dubbo使用上手足够简单，调用过程对业务方透明，对开发人员友好。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/images/雷州岛.jpg">
-<meta property="og:image" content="http://yoursite.com/images/jvm线程内存模型.png">
-<meta property="og:updated_time" content="2017-12-03T05:32:00.342Z">
+<meta property="og:updated_time" content="2018-01-14T14:07:52.545Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="java中如何正确使用volatile">
-<meta name="twitter:description" content="引言对于java开发同学来说，说到多线程首先想到的就是队列、synchronized、lock等等，就这几个东西就够说好几个文章的篇幅了，今天我们主角并不是它们，而是并不太受欢迎的volatile。很多开发同学可能一碰到多线程变量共享问题直接上锁，当然这样做也是无可以厚非，毕竟木有用错，只能说这样编码不是那么的优雅，如果说能使用锁和volatile配合使用无论对性能也好还是对java语言的理解也">
-<meta name="twitter:image" content="http://yoursite.com/images/雷州岛.jpg">
+<meta name="twitter:title" content="深入理解dubbo之服务发布源码分析">
+<meta name="twitter:description" content="dubbo 是阿里开源的一个分布式服务框架，它的最大特点是按照分层的方式来架构，使各层之间充分解耦，并且它是无侵入性的，dubbo可以无缝与spring整合，更重要的是dubbo还提供了强大的容错和监控功能。 对于业务方来说，dubbo使用上手足够简单，调用过程对业务方透明，对开发人员友好。">
 
 
 
@@ -123,13 +119,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/04/16/java中如何正确使用volatile/"/>
+  <link rel="canonical" href="http://yoursite.com/2018/01/14/深入理解dubbo之服务发布源码分析/"/>
 
 
 
 
 
-  <title>java中如何正确使用volatile | 知之’s Blog</title>
+  <title>深入理解dubbo之服务发布源码分析 | 知之’s Blog</title>
   
 
 
@@ -270,7 +266,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/04/16/java中如何正确使用volatile/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/14/深入理解dubbo之服务发布源码分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="赖峣">
@@ -287,7 +283,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">java中如何正确使用volatile</h1>
+          <h1 class="post-title" itemprop="name headline">深入理解dubbo之服务发布源码分析</h1>
         
 
         <div class="post-meta">
@@ -299,8 +295,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-16T15:23:15+08:00">
-                2017-04-16
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-14T22:03:43+08:00">
+                2018-01-14
               </time>
             
 
@@ -317,7 +313,7 @@
 
           
           
-             <span id="/2017/04/16/java中如何正确使用volatile/" class="leancloud_visitors" data-flag-title="java中如何正确使用volatile">
+             <span id="/2018/01/14/深入理解dubbo之服务发布源码分析/" class="leancloud_visitors" data-flag-title="深入理解dubbo之服务发布源码分析">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -342,7 +338,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  926
+                  2,577
                 </span>
               
 
@@ -358,7 +354,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  3
+                  11
                 </span>
               
             </div>
@@ -379,15 +375,42 @@
       
 
       
-        <p><img src="/images/雷州岛.jpg" alt="雷州岛" title="雷州岛"></p>
-<h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>对于java开发同学来说，说到多线程首先想到的就是队列、synchronized、lock等等，就这几个东西就够说好几个文章的篇幅了，今天我们主角并不是它们，而是并不太受欢迎的volatile。很多开发同学可能一碰到多线程变量共享问题直接上锁，当然这样做也是无可以厚非，毕竟木有用错，只能说这样编码不是那么的优雅，如果说能使用锁和volatile配合使用无论对性能也好还是对java语言的理解也都是很有帮助的。<br><a id="more"></a><br>volatile关键字在java多线程中有着比较重要作用，volatile主要作用是可以保持变量在多线程中是实时可见的,是java中提供的最轻量的同步机制。</p>
-<h3 id="可见性"><a href="#可见性" class="headerlink" title="可见性"></a>可见性</h3><p>在Java的内存模型中所有的的变量（这里的变量是类全局变量，并不是局部变量，局部变量在方法内并没有线程安全的问题，因为变量随方法调用完成而销毁）都是存放在主内存中的，而每个线程有自己的工作内存，每次线程执行时，会从主内存获取变量的拷贝，对变量的操作都在线程的工作内存中进行，不同线程之间也不能共享工作内存，只能从主内存读取变量的拷贝。具体可以通过下图来表示：<br><img src="/images/jvm线程内存模型.png" alt="jvm线程内存模型" title="jvm线程内存模型"></p>
-<p>然而对于volatile（使用synchronized/final修饰都具有可见性）来说打破了上述的规则，即当线程修改了变量的值，其他线程可以立即知道该变量的改变。然而对于普通变量来说，当一个线程修改了变量，需要先将变量写回主内存，其他线程从主内存读取变量后才对该线程可见。似乎从以上的描述可以推导出只要使用volatile修饰的变量就可以保证该变量在多线程环境下操作是安全的，因为它对于所有线程的工作内存都是可见的也就是说一致的。这么理解确实没错，但是在java中很多运算都不是原子的，所以在java的一些运算中使用volatile并不能保证线程安全问题。让我们来看一个例子：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public class test&#123;</span><br><span class="line">private static volatile t=0;</span><br><span class="line">   private static int add()&#123;</span><br><span class="line">        return t++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void testVolatile()&#123;</span><br><span class="line">        for (int i=0;i&lt;20;i++)&#123;</span><br><span class="line">            Thread thread=new Thread(()-&gt; &#123;</span><br><span class="line">                for (int j=0;j&lt;1000;j++) &#123;</span><br><span class="line">                    add();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            thread.start();</span><br><span class="line">        &#125;</span><br><span class="line">        while (Thread.activeCount()&gt;1)&#123;</span><br><span class="line">            Thread.yield();</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(t);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        testVolatile();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>预期这个t值应该是20000，但是会出现t值小于20000的情况，原因大家应该猜到了，问题出在t++上，t++并不是一个原子操作，t++的操作在java中代表先获取t值，再加1，再赋值还t。在获取t值时因为是volatile修饰的，所以可以获取线程最新值，然而在加1的时候就不能保证了，有可能其他线程已经加1了。</p>
-<h3 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h3><p>那么什么场景使用volatile是最合适的呢？</p>
+        <p>dubbo 是阿里开源的一个分布式服务框架，它的最大特点是按照分层的方式来架构，使各层之间充分解耦，并且它是无侵入性的，dubbo可以无缝与spring整合，更重要的是dubbo还提供了强大的容错和监控功能。 对于业务方来说，dubbo使用上手足够简单，调用过程对业务方透明，对开发人员友好。</p>
+<a id="more"></a>
+<h3 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a>Demo</h3><p>在spring项目中添加如下pom包：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.alibaba&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;dubbo&lt;/artifactId&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br><span class="line">        &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;org.apache.zookeeper&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;zookeeper&lt;/artifactId&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.github.sgroschupf&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;zkclient&lt;/artifactId&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br></pre></td></tr></table></figure></p>
+<p>如果你的是springboot项目也可以用springboot的starter包<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">            &lt;groupId&gt;io.dubbo.springboot&lt;/groupId&gt;</span><br><span class="line">            &lt;artifactId&gt;spring-boot-starter-dubbo&lt;/artifactId&gt;</span><br><span class="line">            &lt;version&gt;1.0.0&lt;/version&gt;</span><br><span class="line">        &lt;/dependency&gt;</span><br></pre></td></tr></table></figure></p>
+<p>添加配置文件:<br>spring-dubbo.xml<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;</span><br><span class="line">       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span><br><span class="line">       xmlns:dubbo=&quot;http://code.alibabatech.com/schema/dubbo&quot;</span><br><span class="line">       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;</span><br><span class="line">       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd</span><br><span class="line">        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd</span><br><span class="line">        http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd&quot;&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dubbo:application  name=&quot;ifenqu-web&quot;  /&gt;</span><br><span class="line">    &lt;dubbo:registry protocol=&quot;zookeeper&quot; address=&quot;$&#123;dubbo.address&#125;&quot;  /&gt;</span><br><span class="line">    &lt;dubbo:protocol name=&quot;dubbo&quot; port=&quot;$&#123;dubbo.port&#125;&quot;/&gt;</span><br><span class="line">    &lt;dubbo:consumer timeout=&quot;60000&quot; check=&quot;false&quot;/&gt;</span><br><span class="line">    &lt;dubbo:service interface=&quot;com.xxx.xxx.xxxService&quot; ref=&quot;xxxService&quot; timeout=&quot;5000&quot;/&gt;</span><br><span class="line"></span><br><span class="line">&lt;/beans&gt;</span><br></pre></td></tr></table></figure></p>
+<p>调用的时候也很简单<br> <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">  @Autowired</span><br><span class="line">private xxxService xxxService;</span><br></pre></td></tr></table></figure></p>
+<p>demo 接介绍到这，今天的重点不是讲如何使用dubbo，今天的重点是说一说dubbo的架构设计。</p>
+<h3 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h3><p>dubbo框架设计总共分了10层：</p>
+<ol>
+<li><p>服务接口层（Service）：该层是与实际业务逻辑相关，就如上面demo配置的<br><code>&lt;dubbo:service interface=&quot;com.xxx.xxx.xxxService&quot; ref=&quot;xxxService&quot; timeout=&quot;5000&quot;/&gt;</code>,这个service就是业务方自己定义的接口与其实现。</p>
+</li>
+<li><p>配置层（Config）：该层是将业务方的service信息，配置文件的信息收集起来，主要是以ServiceConfig和ReferenceConfig为中心，ServiceConfig是服务提供方的配置，当Spring启动的时候会相应的启动provider服务发布和注册的过程，主要是加入一个ServiceBean继承ServiceConfig在Spring注册。同理ReferenceConfig是consumer方的配置，当消费方启动时，会启动consumer的发现服务订阅服务的过程，当然也是使用一个ReferenceBean继承ReferenceConfig注册在spring上。</p>
+</li>
+<li>服务代理层（Proxy）：对服务接口进行透明代理，生成服务的客户端和服务器端，使服务的远程调用就像在本地调用一样。默认使用JavassistProxyFactory，返回一个Invoker，Invoker则是个可执行核心实体，Invoker的invoke方法通过反射执行service方法。</li>
+<li>服务注册层（Registry）：封装服务地址的注册和发现，以服务URL为中心，基于zk。</li>
+<li>集群层（Cluster）:提供多个节点并桥接注册中心，主要负责loadBanlance、容错。</li>
+<li>监控层（Monitor）：RPC调用次数和调用时间监控，以Statistics为中心，扩展接口为MonitorFactory、Monitor和MonitorService。</li>
+<li>远程调用层（Protocol）：封装RPC调用，provider通过export方法进行暴露服务/consumer通过refer方法调用服务。而Protocol依赖的是Invoker。通过上面说的Proxy获得的Invoker，包装成Exporter。</li>
+<li>信息交换层（Exchange）：该层封装了请求响应模型，将同步转为异步，信息交换层依赖Exporter，最终将通过网络传输层接收调用请求RequestFuture和ResponseFuture。</li>
+<li>网络传输层（Transport）：抽象mina和netty为统一接口，以Message为中心，扩展接口为Channel、Transporter、Client、Server和Codec。</li>
+<li>数据序列化层：该层无需多言，将数据序列化反序列化。<h4 id="服务发布过程"><a href="#服务发布过程" class="headerlink" title="服务发布过程"></a>服务发布过程</h4>通过上面的框架了解我们大致知道了dubbo是怎么工作的，接下来我们来通过代码来具体看看dubbo的服务发布过程，进一步理解dubbo的工作原理。<br>先看到demo中的spring-dubbo配置文件。这些配置文件全都会被装配成RegistryConfig，其属性如下：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line">public class RegistryConfig extends AbstractConfig &#123;</span><br><span class="line"></span><br><span class="line">	private static final long serialVersionUID = 5508512956753757169L;</span><br><span class="line">	</span><br><span class="line">	public static final String NO_AVAILABLE = &quot;N/A&quot;;</span><br><span class="line"></span><br><span class="line">    // 注册中心地址</span><br><span class="line">    private String            address;</span><br><span class="line">    </span><br><span class="line">	// 注册中心登录用户名</span><br><span class="line">    private String            username;</span><br><span class="line"></span><br><span class="line">    // 注册中心登录密码</span><br><span class="line">    private String            password;</span><br><span class="line"></span><br><span class="line">    // 注册中心缺省端口</span><br><span class="line">    private Integer           port;</span><br><span class="line">    </span><br><span class="line">    // 注册中心协议</span><br><span class="line">    private String            protocol;</span><br><span class="line"></span><br><span class="line">    // 客户端实现</span><br><span class="line">    private String            transporter;</span><br><span class="line">    </span><br><span class="line">    private String            server;</span><br><span class="line">    </span><br><span class="line">    private String            client;</span><br><span class="line"></span><br><span class="line">    private String            cluster;</span><br><span class="line">    </span><br><span class="line">    private String            group;</span><br><span class="line"></span><br><span class="line">	private String            version;</span><br><span class="line"></span><br><span class="line">    // 注册中心请求超时时间(毫秒)</span><br><span class="line">    private Integer           timeout;</span><br><span class="line"></span><br><span class="line">    // 注册中心会话超时时间(毫秒)</span><br><span class="line">    private Integer           session;</span><br><span class="line">    </span><br><span class="line">    // 动态注册中心列表存储文件</span><br><span class="line">    private String            file;</span><br><span class="line">    </span><br><span class="line">    // 停止时等候完成通知时间</span><br><span class="line">    private Integer           wait;</span><br><span class="line">    </span><br><span class="line">    // 启动时检查注册中心是否存在</span><br><span class="line">    private Boolean           check;</span><br><span class="line"></span><br><span class="line">    // 在该注册中心上注册是动态的还是静态的服务</span><br><span class="line">    private Boolean           dynamic;</span><br><span class="line">    </span><br><span class="line">    // 在该注册中心上服务是否暴露</span><br><span class="line">    private Boolean           register;</span><br><span class="line">    </span><br><span class="line">    // 在该注册中心上服务是否引用</span><br><span class="line">    private Boolean           subscribe;</span><br><span class="line"></span><br><span class="line">    // 自定义参数</span><br><span class="line">    private Map&lt;String, String&gt; parameters;</span><br><span class="line"></span><br><span class="line">    // 是否为缺省</span><br><span class="line">    private Boolean             isDefault;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>这些配置文件根据注册中心的个数会被装配拼接成Dubbo的URL（该url是dubbo中自定义的），该URL长这个样子：<br><code>registry://sit-zk.host:2181/com.alibaba.dubbo.registry.RegistryService?application=ifenqu-web&amp;dubbo=2.5.3&amp;pid=13168&amp;registry=zookeeper&amp;timestamp=1510828420296</code><br>看完配置信息，接下来让我们看下Service发布的核心方法：<code>ServiceConfig</code>类中的<code>doExportUrls</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">private void doExportUrls() &#123;</span><br><span class="line">        //该方法根据配置文件装配成一个URL的list</span><br><span class="line">        List&lt;URL&gt; registryURLs = loadRegistries(true);</span><br><span class="line">        //根据每一个协议配置来分别暴露服务</span><br><span class="line">        for (ProtocolConfig protocolConfig : protocols) &#123;</span><br><span class="line">            doExportUrlsFor1Protocol(protocolConfig, registryURLs);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个<code>protocols</code>长这个样子<code>&lt;dubbo:protocol name=&quot;dubbo&quot; port=&quot;20888&quot; id=&quot;dubbo&quot; /&gt;</code> <code>protocols</code>也是根据配置装配出来的。接下来让我们进入<code>doExportUrlsFor1Protocol</code>方法看看dubbo具体是怎么样将服务暴露出去的。这个方法特别大，有将近300多行代码，但是其中大部分都是获取类似protocols的name、port、host和一些必要的上下文，代码太长就不全都贴出来了，只贴关键部分。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List&lt;URL&gt; registryURLs) &#123; </span><br><span class="line">//........省略获取上下文代码</span><br><span class="line">//通过interfaceClass获取要暴露服务的所有要暴露的方法</span><br><span class="line">String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();</span><br><span class="line">//.......省略非核心代码</span><br><span class="line">//根据上下文创建URL对象</span><br><span class="line"> URL url = new URL(name, host, port, (contextPath == null || contextPath.length() == 0 ? &quot;&quot; : contextPath + &quot;/&quot;) + path, map);</span><br><span class="line"></span><br><span class="line">//通过proxyFactory来获取Invoker对象</span><br><span class="line"> Invoker&lt;?&gt; invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));</span><br><span class="line">//将invoker对象在protocol中封装成Exporter方便提供给信息交换层进行网络传输</span><br><span class="line"> Exporter&lt;?&gt; exporter = protocol.export(invoker);</span><br><span class="line"> //将exporter添加到list中</span><br><span class="line"> exporters.add(exporter);</span><br></pre></td></tr></table></figure></p>
+<p>看到这里就比较明白dubbo的工作原理了<code>doExportUrlsFor1Protocol</code>方法，先创建URL，URL创建出来长这样<code>dubbo://192.168.xx.63:20888/com.xxx.xxx.VehicleInfoService?anyhost=true&amp;application=test-web&amp;default.retries=0&amp;dubbo=2.5.3&amp;interface=com.xxx.xxx.VehicleInfoService&amp;methods=get,save,update,del,list&amp;pid=13168&amp;revision=1.2.38&amp;side=provider&amp;timeout=5000&amp;timestamp=1510829644847</code>，是不是觉得这个URL很眼熟，没错在注册中心看到的services的providers信息就是这个，再传入url通过proxyFactory获取Invoker，再将Invoker封装成Exporter的数组，只需要将这个list提供给网络传输层组件，然后consumer执行Invoker的invoke方法就行了。让我们再看看这个proxyFactory的getInvoker方法。proxyFactory下有JDKProxyFactory和JavassistProxyFactory。官方推荐也是默认使用的是JavassistProxyFactory。因为javassist动态代理性能比JDK的高。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">public class JavassistProxyFactory extends AbstractProxyFactory &#123;</span><br><span class="line"></span><br><span class="line">    @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">    public &lt;T&gt; T getProxy(Invoker&lt;T&gt; invoker, Class&lt;?&gt;[] interfaces) &#123;</span><br><span class="line">        return (T) Proxy.getProxy(interfaces).newInstance(new InvokerInvocationHandler(invoker));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public &lt;T&gt; Invoker&lt;T&gt; getInvoker(T proxy, Class&lt;T&gt; type, URL url) &#123;</span><br><span class="line">        // TODO Wrapper类不能正确处理带$的类名</span><br><span class="line">        final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf(&apos;$&apos;) &lt; 0 ? proxy.getClass() : type);</span><br><span class="line">        return new AbstractProxyInvoker&lt;T&gt;(proxy, type, url) &#123;</span><br><span class="line">            @Override</span><br><span class="line">            protected Object doInvoke(T proxy, String methodName, </span><br><span class="line">                                      Class&lt;?&gt;[] parameterTypes, </span><br><span class="line">                                      Object[] arguments) throws Throwable &#123;</span><br><span class="line">                return wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到使用了动态代理的方式调用了要暴露的service的方法。并且返回了Invoker对象。在dubbo的服务发布中我们可以看到，这个Invoker贯穿始终，都可以看成是一个context的作用了，让我们进Invoker里面去看看这个Invoker到底是何方神圣。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">public interface Invoker&lt;T&gt; extends Node &#123;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * get service interface.</span><br><span class="line">     * </span><br><span class="line">     * @return service interface.</span><br><span class="line">     */</span><br><span class="line">    Class&lt;T&gt; getInterface();</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * invoke.</span><br><span class="line">     * </span><br><span class="line">     * @param invocation</span><br><span class="line">     * @return result</span><br><span class="line">     * @throws RpcException</span><br><span class="line">     */</span><br><span class="line">    Result invoke(Invocation invocation) throws RpcException;</span><br></pre></td></tr></table></figure></p>
+<p>这个Invoker就两个方法，一个getInterface，也就是要暴露的服务接口，一个就是invoke方法，这个invoke方法在AbstractProxyInvoker中是这样的：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public Result invoke(Invocation invocation) throws RpcException &#123;</span><br><span class="line">    try &#123;</span><br><span class="line">    //调用doInvoke方法，返回一个Result</span><br><span class="line">        return new RpcResult(doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments()));</span><br><span class="line">    &#125; catch (InvocationTargetException e) &#123;</span><br><span class="line">        return new RpcResult(e.getTargetException());</span><br><span class="line">    &#125; catch (Throwable e) &#123;</span><br><span class="line">        throw new RpcException(&quot;Failed to invoke remote proxy method &quot; + invocation.getMethodName() + &quot; to &quot; + getUrl() + &quot;, cause: &quot; + e.getMessage(), e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>其实看到JavassistProxyFactory大家就应该大概明白了这个Invoker的作用，同时这个类的名字就叫Invoker也可以猜个大概，Invoker就是调用service的方法的实体类。其中doInvoke方法已经在JavassistProxyFactory中定义了，通过反射调用要暴露的service的方法。</p>
+<h4 id="服务发布总结"><a href="#服务发布总结" class="headerlink" title="服务发布总结"></a>服务发布总结</h4><p>看完源码，我们已经知道了dubbo的主要发布过程，现在我们回过头来结合dubbo的总体架构和源码的分析，总结一下dubbo服务发布。服务发布过程总共五个步骤：</p>
 <ul>
-<li>在变量运算不依赖当前值</li>
-<li>变量不需要与其他状态变量共同参与不变约束<br>翻译成中文就是对于那些在<strong>多线程中既有读又有写的变量，完全可以使用volatile修饰</strong>，这样就对于读操作就不要使用lock/synchronized比较重的操作了，直接读就是，因为变量是可见的。</li>
+<li>业务方将服务接口和实现编写定义好，添加dubbo相关配置文件。</li>
+<li>Config层加载配置文件形成上下文，Config层包括：ServiceConfig、ProviderConfig、RegistryConfig等。</li>
+<li>ServiceConfig根据Protocol类型，根据ProtocolConfig、ProviderConfig加载registry，根据加载的registry创建dubbo的URL。</li>
+<li>准备工作做完后ProxyFactory上场，dubbo中有两种代理方式，JDK代理和Javassist代理，默认使用Javassist代理，Proxy代理类根据dubbo配置信息获取到接口信息、通过动态代理方式将接口的所有方法交给Proxy代理类进行代理，并封装进Invoker里面。</li>
+<li>将所有需要暴露的service封装的Invoker组成一个list传给信息交换层提供给消费方进行调用。</li>
 </ul>
 
       
@@ -404,12 +427,6 @@
 
     <footer class="post-footer">
       
-        <div class="post-tags">
-          
-            <a href="/tags/volatile-多线程/" rel="tag"># volatile,多线程</a>
-          
-        </div>
-      
 
       
       
@@ -419,8 +436,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/12/07/Spring-boot学习之调用dubbo/" rel="next" title="Spring boot学习之调用dubbo">
-                <i class="fa fa-chevron-left"></i> Spring boot学习之调用dubbo
+              <a href="/2018/01/14/elasticsearch5-3-0-索引创建及查询/" rel="next" title="elasticsearch5.3.0 索引创建及查询">
+                <i class="fa fa-chevron-left"></i> elasticsearch5.3.0 索引创建及查询
               </a>
             
           </div>
@@ -429,8 +446,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2017/06/21/elasticsearch5-x服务器搭建/" rel="prev" title="elasticsearch5.x服务器搭建">
-                elasticsearch5.x服务器搭建 <i class="fa fa-chevron-right"></i>
+              <a href="/2018/01/14/深入理解dubbo之服务引用源码分析/" rel="prev" title="深入理解dubbo之服务引用源码分析">
+                深入理解dubbo之服务引用源码分析 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -568,7 +585,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#引言"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#可见性"><span class="nav-number">2.</span> <span class="nav-text">可见性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用场景"><span class="nav-number">3.</span> <span class="nav-text">使用场景</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Demo"><span class="nav-number">1.</span> <span class="nav-text">Demo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#源码分析"><span class="nav-number">2.</span> <span class="nav-text">源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#服务发布过程"><span class="nav-number">2.1.</span> <span class="nav-text">服务发布过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#服务发布总结"><span class="nav-number">2.2.</span> <span class="nav-text">服务发布总结</span></a></li></ol></li></ol></div>
             
 
           </div>

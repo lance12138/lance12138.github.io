@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="volatile,多线程," />
+  <meta name="keywords" content="dubbo," />
 
 
 
@@ -79,21 +79,18 @@
 
 
 
-<meta name="description" content="引言对于java开发同学来说，说到多线程首先想到的就是队列、synchronized、lock等等，就这几个东西就够说好几个文章的篇幅了，今天我们主角并不是它们，而是并不太受欢迎的volatile。很多开发同学可能一碰到多线程变量共享问题直接上锁，当然这样做也是无可以厚非，毕竟木有用错，只能说这样编码不是那么的优雅，如果说能使用锁和volatile配合使用无论对性能也好还是对java语言的理解也">
-<meta name="keywords" content="volatile,多线程">
+<meta name="description" content="在之前说了一下dubbo的服务发布过程，其实严格意义上只说了一半吧，只把dubbo如何经过ProxyFactory的代理成一个Invoker，等待客户端调用的过程讲了一遍，而重要的Protocol.export方法略过去了，今天我将连带dubbo的comsumer客户端服务引用和Protocol机制来讲一讲。">
+<meta name="keywords" content="dubbo">
 <meta property="og:type" content="article">
-<meta property="og:title" content="java中如何正确使用volatile">
-<meta property="og:url" content="http://yoursite.com/2017/04/16/java中如何正确使用volatile/index.html">
+<meta property="og:title" content="深入理解dubbo之服务引用源码分析">
+<meta property="og:url" content="http://yoursite.com/2018/01/14/深入理解dubbo之服务引用源码分析/index.html">
 <meta property="og:site_name" content="知之’s Blog">
-<meta property="og:description" content="引言对于java开发同学来说，说到多线程首先想到的就是队列、synchronized、lock等等，就这几个东西就够说好几个文章的篇幅了，今天我们主角并不是它们，而是并不太受欢迎的volatile。很多开发同学可能一碰到多线程变量共享问题直接上锁，当然这样做也是无可以厚非，毕竟木有用错，只能说这样编码不是那么的优雅，如果说能使用锁和volatile配合使用无论对性能也好还是对java语言的理解也">
+<meta property="og:description" content="在之前说了一下dubbo的服务发布过程，其实严格意义上只说了一半吧，只把dubbo如何经过ProxyFactory的代理成一个Invoker，等待客户端调用的过程讲了一遍，而重要的Protocol.export方法略过去了，今天我将连带dubbo的comsumer客户端服务引用和Protocol机制来讲一讲。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/images/雷州岛.jpg">
-<meta property="og:image" content="http://yoursite.com/images/jvm线程内存模型.png">
-<meta property="og:updated_time" content="2017-12-03T05:32:00.342Z">
+<meta property="og:updated_time" content="2018-01-14T14:07:15.186Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="java中如何正确使用volatile">
-<meta name="twitter:description" content="引言对于java开发同学来说，说到多线程首先想到的就是队列、synchronized、lock等等，就这几个东西就够说好几个文章的篇幅了，今天我们主角并不是它们，而是并不太受欢迎的volatile。很多开发同学可能一碰到多线程变量共享问题直接上锁，当然这样做也是无可以厚非，毕竟木有用错，只能说这样编码不是那么的优雅，如果说能使用锁和volatile配合使用无论对性能也好还是对java语言的理解也">
-<meta name="twitter:image" content="http://yoursite.com/images/雷州岛.jpg">
+<meta name="twitter:title" content="深入理解dubbo之服务引用源码分析">
+<meta name="twitter:description" content="在之前说了一下dubbo的服务发布过程，其实严格意义上只说了一半吧，只把dubbo如何经过ProxyFactory的代理成一个Invoker，等待客户端调用的过程讲了一遍，而重要的Protocol.export方法略过去了，今天我将连带dubbo的comsumer客户端服务引用和Protocol机制来讲一讲。">
 
 
 
@@ -123,13 +120,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2017/04/16/java中如何正确使用volatile/"/>
+  <link rel="canonical" href="http://yoursite.com/2018/01/14/深入理解dubbo之服务引用源码分析/"/>
 
 
 
 
 
-  <title>java中如何正确使用volatile | 知之’s Blog</title>
+  <title>深入理解dubbo之服务引用源码分析 | 知之’s Blog</title>
   
 
 
@@ -270,7 +267,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/04/16/java中如何正确使用volatile/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/14/深入理解dubbo之服务引用源码分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="赖峣">
@@ -287,7 +284,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">java中如何正确使用volatile</h1>
+          <h1 class="post-title" itemprop="name headline">深入理解dubbo之服务引用源码分析</h1>
         
 
         <div class="post-meta">
@@ -299,8 +296,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-16T15:23:15+08:00">
-                2017-04-16
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-14T22:06:08+08:00">
+                2018-01-14
               </time>
             
 
@@ -317,7 +314,7 @@
 
           
           
-             <span id="/2017/04/16/java中如何正确使用volatile/" class="leancloud_visitors" data-flag-title="java中如何正确使用volatile">
+             <span id="/2018/01/14/深入理解dubbo之服务引用源码分析/" class="leancloud_visitors" data-flag-title="深入理解dubbo之服务引用源码分析">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -342,7 +339,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  926
+                  2,646
                 </span>
               
 
@@ -358,7 +355,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  3
+                  12
                 </span>
               
             </div>
@@ -379,16 +376,30 @@
       
 
       
-        <p><img src="/images/雷州岛.jpg" alt="雷州岛" title="雷州岛"></p>
-<h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>对于java开发同学来说，说到多线程首先想到的就是队列、synchronized、lock等等，就这几个东西就够说好几个文章的篇幅了，今天我们主角并不是它们，而是并不太受欢迎的volatile。很多开发同学可能一碰到多线程变量共享问题直接上锁，当然这样做也是无可以厚非，毕竟木有用错，只能说这样编码不是那么的优雅，如果说能使用锁和volatile配合使用无论对性能也好还是对java语言的理解也都是很有帮助的。<br><a id="more"></a><br>volatile关键字在java多线程中有着比较重要作用，volatile主要作用是可以保持变量在多线程中是实时可见的,是java中提供的最轻量的同步机制。</p>
-<h3 id="可见性"><a href="#可见性" class="headerlink" title="可见性"></a>可见性</h3><p>在Java的内存模型中所有的的变量（这里的变量是类全局变量，并不是局部变量，局部变量在方法内并没有线程安全的问题，因为变量随方法调用完成而销毁）都是存放在主内存中的，而每个线程有自己的工作内存，每次线程执行时，会从主内存获取变量的拷贝，对变量的操作都在线程的工作内存中进行，不同线程之间也不能共享工作内存，只能从主内存读取变量的拷贝。具体可以通过下图来表示：<br><img src="/images/jvm线程内存模型.png" alt="jvm线程内存模型" title="jvm线程内存模型"></p>
-<p>然而对于volatile（使用synchronized/final修饰都具有可见性）来说打破了上述的规则，即当线程修改了变量的值，其他线程可以立即知道该变量的改变。然而对于普通变量来说，当一个线程修改了变量，需要先将变量写回主内存，其他线程从主内存读取变量后才对该线程可见。似乎从以上的描述可以推导出只要使用volatile修饰的变量就可以保证该变量在多线程环境下操作是安全的，因为它对于所有线程的工作内存都是可见的也就是说一致的。这么理解确实没错，但是在java中很多运算都不是原子的，所以在java的一些运算中使用volatile并不能保证线程安全问题。让我们来看一个例子：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public class test&#123;</span><br><span class="line">private static volatile t=0;</span><br><span class="line">   private static int add()&#123;</span><br><span class="line">        return t++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void testVolatile()&#123;</span><br><span class="line">        for (int i=0;i&lt;20;i++)&#123;</span><br><span class="line">            Thread thread=new Thread(()-&gt; &#123;</span><br><span class="line">                for (int j=0;j&lt;1000;j++) &#123;</span><br><span class="line">                    add();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            thread.start();</span><br><span class="line">        &#125;</span><br><span class="line">        while (Thread.activeCount()&gt;1)&#123;</span><br><span class="line">            Thread.yield();</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(t);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        testVolatile();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>预期这个t值应该是20000，但是会出现t值小于20000的情况，原因大家应该猜到了，问题出在t++上，t++并不是一个原子操作，t++的操作在java中代表先获取t值，再加1，再赋值还t。在获取t值时因为是volatile修饰的，所以可以获取线程最新值，然而在加1的时候就不能保证了，有可能其他线程已经加1了。</p>
-<h3 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h3><p>那么什么场景使用volatile是最合适的呢？</p>
-<ul>
-<li>在变量运算不依赖当前值</li>
-<li>变量不需要与其他状态变量共同参与不变约束<br>翻译成中文就是对于那些在<strong>多线程中既有读又有写的变量，完全可以使用volatile修饰</strong>，这样就对于读操作就不要使用lock/synchronized比较重的操作了，直接读就是，因为变量是可见的。</li>
-</ul>
+        <p>在之前说了一下dubbo的服务发布过程，其实严格意义上只说了一半吧，只把dubbo如何经过ProxyFactory的代理成一个Invoker，等待客户端调用的过程讲了一遍，而重要的Protocol.export方法略过去了，今天我将连带dubbo的comsumer客户端服务引用和Protocol机制来讲一讲。</p>
+<a id="more"></a>
+<h3 id="dubbo服务引用"><a href="#dubbo服务引用" class="headerlink" title="dubbo服务引用"></a>dubbo服务引用</h3><p>和上一篇文章一样，先来个demo</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;</span><br><span class="line">       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span><br><span class="line">       xmlns:dubbo=&quot;http://code.alibabatech.com/schema/dubbo&quot;</span><br><span class="line">       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;</span><br><span class="line">       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd</span><br><span class="line">        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd</span><br><span class="line">        http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd&quot;&gt;</span><br><span class="line"></span><br><span class="line">    &lt;dubbo:application  name=&quot;ifenqu-web&quot;  /&gt;</span><br><span class="line">    &lt;dubbo:registry protocol=&quot;zookeeper&quot; address=&quot;$&#123;dubbo.address&#125;&quot;  /&gt;</span><br><span class="line">    &lt;dubbo:protocol name=&quot;dubbo&quot; port=&quot;$&#123;dubbo.port&#125;&quot;/&gt;</span><br><span class="line">    &lt;dubbo:consumer timeout=&quot;60000&quot; check=&quot;false&quot;/&gt;</span><br><span class="line">    &lt;dubbo:service interface=&quot;com.xxx.xxx.xxxService&quot; ref=&quot;xxxService&quot; timeout=&quot;5000&quot;/&gt;</span><br><span class="line"></span><br><span class="line">&lt;/beans&gt;</span><br></pre></td></tr></table></figure>
+<p>在上篇文章我们已经说了，对于service暴露方也就是provider方有对应的ServiceConfig，相应的Reference引用方也就是Consumer有对应的ReferenceConfig。ReferenceConfig中定义了每一个接口参数定义，这只是部分，还有一大堆参数在父类里就不列出来了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">// 接口类型</span><br><span class="line">private String               interfaceName;</span><br><span class="line"></span><br><span class="line">private Class&lt;?&gt;             interfaceClass;</span><br><span class="line"></span><br><span class="line">// 客户端类型</span><br><span class="line">private String               client;</span><br><span class="line"></span><br><span class="line">// 点对点直连服务提供地址</span><br><span class="line">private String               url;</span><br><span class="line"></span><br><span class="line">// 方法配置</span><br><span class="line">private List&lt;MethodConfig&gt;   methods;//接口所有的方法配置</span><br><span class="line"></span><br><span class="line">// 缺省配置</span><br><span class="line">private ConsumerConfig       consumer;//该参数对应的就是&lt;dubbo:consumer timeout=&quot;60000&quot; check=&quot;false&quot;/&gt;</span><br><span class="line"></span><br><span class="line">private String				 protocol;//如果为空默认dubbo</span><br></pre></td></tr></table></figure>
+<p>参数设值分两步，第一步是对象创建的时候，第二步是调用了get方法后执行init()方法。这个get方法就是服务引用的入口：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public synchronized T get() &#123;</span><br><span class="line">        if (destroyed)&#123;</span><br><span class="line">            throw new IllegalStateException(&quot;Already destroyed!&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        //服务实例已经存在就直接返回，没有就进行初始化</span><br><span class="line">    	if (ref == null) &#123;</span><br><span class="line">    		init();</span><br><span class="line">    	&#125;</span><br><span class="line">    	return ref;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>init()方法主要分为两个步骤，第一步：收集上下文，第二步：根据上下文创建服务实例 <code>ref = createProxy(map);</code>进入createProxy方法中去看看</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line">private T createProxy(Map&lt;String, String&gt; map) &#123;</span><br><span class="line">		URL tmpUrl = new URL(&quot;temp&quot;, &quot;localhost&quot;, 0, map);</span><br><span class="line">		final boolean isJvmRefer;</span><br><span class="line">        if (isInjvm() == null) &#123;</span><br><span class="line">            if (url != null &amp;&amp; url.length() &gt; 0) &#123; //指定URL的情况下，不做本地引用</span><br><span class="line">                isJvmRefer = false;</span><br><span class="line">            &#125; else if (InjvmProtocol.getInjvmProtocol().isInjvmRefer(tmpUrl)) &#123;</span><br><span class="line">                //默认情况下如果本地有服务暴露，则引用本地服务.</span><br><span class="line">                isJvmRefer = true;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                isJvmRefer = false;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            isJvmRefer = isInjvm().booleanValue();</span><br><span class="line">        &#125;</span><br><span class="line">		</span><br><span class="line">		if (isJvmRefer) &#123;</span><br><span class="line">			URL url = new URL(Constants.LOCAL_PROTOCOL, NetUtils.LOCALHOST, 0, interfaceClass.getName()).addParameters(map);</span><br><span class="line">			invoker = refprotocol.refer(interfaceClass, url);</span><br><span class="line">            if (logger.isInfoEnabled()) &#123;</span><br><span class="line">                logger.info(&quot;Using injvm service &quot; + interfaceClass.getName());</span><br><span class="line">            &#125;</span><br><span class="line">		&#125; else &#123;</span><br><span class="line">            if (url != null &amp;&amp; url.length() &gt; 0) &#123; // 用户指定URL，指定的URL可能是对点对直连地址，也可能是注册中心URL</span><br><span class="line">                String[] us = Constants.SEMICOLON_SPLIT_PATTERN.split(url);</span><br><span class="line">                if (us != null &amp;&amp; us.length &gt; 0) &#123;</span><br><span class="line">                    for (String u : us) &#123;</span><br><span class="line">                        URL url = URL.valueOf(u);</span><br><span class="line">                        if (url.getPath() == null || url.getPath().length() == 0) &#123;</span><br><span class="line">                            url = url.setPath(interfaceName);</span><br><span class="line">                        &#125;</span><br><span class="line">                        if (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) &#123;</span><br><span class="line">                            urls.add(url.addParameterAndEncoded(Constants.REFER_KEY, StringUtils.toQueryString(map)));</span><br><span class="line">                        &#125; else &#123;</span><br><span class="line">                            urls.add(ClusterUtils.mergeUrl(url, map));</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; else &#123; // 通过注册中心配置拼装URL</span><br><span class="line">            	List&lt;URL&gt; us = loadRegistries(false);</span><br><span class="line">            	if (us != null &amp;&amp; us.size() &gt; 0) &#123;</span><br><span class="line">                	for (URL u : us) &#123;</span><br><span class="line">                	    URL monitorUrl = loadMonitor(u);</span><br><span class="line">                        if (monitorUrl != null) &#123;</span><br><span class="line">                            map.put(Constants.MONITOR_KEY, URL.encode(monitorUrl.toFullString()));</span><br><span class="line">                        &#125;</span><br><span class="line">                	    urls.add(u.addParameterAndEncoded(Constants.REFER_KEY, StringUtils.toQueryString(map)));</span><br><span class="line">                    &#125;</span><br><span class="line">            	&#125;</span><br><span class="line">            	if (urls == null || urls.size() == 0) &#123;</span><br><span class="line">                    throw new IllegalStateException(&quot;No such any registry to reference &quot; + interfaceName  + &quot; on the consumer &quot; + NetUtils.getLocalHost() + &quot; use dubbo version &quot; + Version.getVersion() + &quot;, please config &lt;dubbo:registry address=\&quot;...\&quot; /&gt; to your spring config.&quot;);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            if (urls.size() == 1) &#123;</span><br><span class="line">                invoker = refprotocol.refer(interfaceClass, urls.get(0));</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                List&lt;Invoker&lt;?&gt;&gt; invokers = new ArrayList&lt;Invoker&lt;?&gt;&gt;();</span><br><span class="line">                URL registryURL = null;</span><br><span class="line">                for (URL url : urls) &#123;</span><br><span class="line">                    invokers.add(refprotocol.refer(interfaceClass, url));</span><br><span class="line">                    if (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) &#123;</span><br><span class="line">                        registryURL = url; // 用了最后一个registry url</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                if (registryURL != null) &#123; // 有 注册中心协议的URL</span><br><span class="line">                    // 对有注册中心的Cluster 只用 AvailableCluster</span><br><span class="line">                    URL u = registryURL.addParameter(Constants.CLUSTER_KEY, AvailableCluster.NAME); </span><br><span class="line">                    invoker = cluster.join(new StaticDirectory(u, invokers));</span><br><span class="line">                &#125;  else &#123; // 不是 注册中心的URL</span><br><span class="line">                    invoker = cluster.join(new StaticDirectory(invokers));</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        //忽略非核心代码</span><br><span class="line">        // 创建服务代理</span><br><span class="line">        return (T) proxyFactory.getProxy(invoker);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>该方法中主要逻辑就是先判断需要引用的类型，是本地服务暴露还是直连远程服务还是集群远程服务。如果暴露的服务本地就有直接url就是localhost，而对于集群还涉及到了loadbanlance。无论是什么类型的服务核心都是<code>refprotocol.refer(interfaceClass, urls.get(0))</code>，这个方法的返回值就是上篇说的Invoker对象，回忆一下，Invoker对象中封装了接口信息和invoke方法，只要客户端拿到了这个Invoker就可以执行invoke进而通过远程通信触发服务端的service返回执行结果。让我们的视线再回到refprotocol上：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">@SPI(&quot;dubbo&quot;)</span><br><span class="line">public interface Protocol &#123;</span><br><span class="line">    int getDefaultPort();</span><br><span class="line"></span><br><span class="line">    @Adaptive</span><br><span class="line">    &lt;T&gt; Exporter&lt;T&gt; export(Invoker&lt;T&gt; var1) throws RpcException;</span><br><span class="line"></span><br><span class="line">    @Adaptive</span><br><span class="line">    &lt;T&gt; Invoker&lt;T&gt; refer(Class&lt;T&gt; var1, URL var2) throws RpcException;</span><br><span class="line"></span><br><span class="line">    void destroy();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个Protocol接口定义了三个方法，export、refer、destory。分别是服务暴露和服务引用和销毁方法。经过上一篇的讲述，我们已经知道了dubbo支持dubbo、http、thrift等多种协议。那么dubbo是如何做到多个版本协议可以切换自如呢？方法就在SPI上。</p>
+<h4 id="SPI"><a href="#SPI" class="headerlink" title="SPI"></a>SPI</h4><p>SPI（Service Provider Interface）本来是针对不同厂商或插件的一个规范，提供扩展的时候可以对同一个功能用不同的实现。Java SPI的基本思想可以用设计模式六大原则之开闭原则解释，也就是说要对接口开放，对修改关闭。基于这个原则我们就可以对不同的实现完成可拔插的效果。多种不用实现想用哪种用哪种，只要简单修改配置。 Java SPI的具体约定为:当服务的提供者，提供了服务接口的一种实现之后，在jar包的META-INF/services/目录里同时创建一个以服务接口命名的文件。该文件里就是实现该服务接口的具体实现类。而当外部程序装配这个模块的时候，就能通过该jar包META-INF/services/里的配置文件找到具体的实现类名，并装载实例化，完成模块的注入。 基于这样一个约定就能很好的找到服务接口的实现类，而不需要再代码里制定。jdk提供服务实现查找的一个工具类：java.util.ServiceLoader</p>
+<p>知道了SPI的定义现在就更好了解Protocol的实现原理了，在ReferenceConfig中获取具体的Protocol是这一行代码<code>private static final Protocol refprotocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();</code>我们可以根据SPI的定义来看看它的实现过程。进入ExtensionLoader类，在这个类中我们可以看到以下几个熟悉的全局常量</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">private static final String SERVICES_DIRECTORY = &quot;META-INF/services/&quot;;</span><br><span class="line">   private static final String DUBBO_DIRECTORY = &quot;META-INF/dubbo/&quot;;</span><br><span class="line">   private static final String DUBBO_INTERNAL_DIRECTORY = &quot;META-INF/dubbo/internal/&quot;;</span><br><span class="line">   private static final ConcurrentMap&lt;Class&lt;?&gt;, ExtensionLoader&lt;?&gt;&gt; EXTENSION_LOADERS = new ConcurrentHashMap();</span><br></pre></td></tr></table></figure>
+<p>debug断点跟进去就会看到这个EXTENSION_LOADERS里面已经装满了多个ExtensionLoaders，尽到dubbo的jar包的<code>META-INF/dubbo/internal/</code>路径时就全明白了，这里面就是这些ExtensionLoaders。就拿我们要说的Protocol来说，<code>ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension()</code>这行代码说的就是传入Protocol.class类型，就能在EXTENSION_LOADERS中找到<code>com.alibaba.dubbo.rpc.Protocol</code>这个类，也就是<code>META-INF/dubbo/internal/</code>路径下的定义的文件<code>com.alibaba.dubbo.rpc.Protocol</code>。进入这个文件我们能看到所有Protocol实现类定义:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">registry=com.alibaba.dubbo.registry.integration.RegistryProtocol</span><br><span class="line">dubbo=com.alibaba.dubbo.rpc.protocol.dubbo.DubboProtocol</span><br><span class="line">filter=com.alibaba.dubbo.rpc.protocol.ProtocolFilterWrapper</span><br><span class="line">listener=com.alibaba.dubbo.rpc.protocol.ProtocolListenerWrapper</span><br><span class="line">mock=com.alibaba.dubbo.rpc.support.MockProtocol</span><br><span class="line">injvm=com.alibaba.dubbo.rpc.protocol.injvm.InjvmProtocol</span><br><span class="line">rmi=com.alibaba.dubbo.rpc.protocol.rmi.RmiProtocol</span><br><span class="line">hessian=com.alibaba.dubbo.rpc.protocol.hessian.HessianProtocol</span><br><span class="line">com.alibaba.dubbo.rpc.protocol.http.HttpProtocol</span><br><span class="line">com.alibaba.dubbo.rpc.protocol.webservice.WebServiceProtocol</span><br><span class="line">thrift=com.alibaba.dubbo.rpc.protocol.thrift.ThriftProtocol</span><br><span class="line">memcached=com.alibaba.dubbo.rpc.protocol.memcached.MemcachedProtocol</span><br><span class="line"></span><br><span class="line">redis=com.alibaba.dubbo.rpc.protocol.redis.RedisProtocol</span><br></pre></td></tr></table></figure>
+<p>如果你选择dubbo协议，Protocol的接口实现类就会使用<code>com.alibaba.dubbo.rpc.protocol.dubbo.DubboProtocol</code>我这里使用的是系统默认的dubbo协议，所以我们上面ReferenceConfig方法里面调用的<code>invoker = refprotocol.refer(interfaceClass, urls.get(0));</code>就是DubboProtocol的Refer方法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">public &lt;T&gt; Invoker&lt;T&gt; refer(Class&lt;T&gt; serviceType, URL url) throws RpcException &#123;</span><br><span class="line">       DubboInvoker&lt;T&gt; invoker = new DubboInvoker(serviceType, url, this.getClients(url), this.invokers);</span><br><span class="line">       this.invokers.add(invoker);</span><br><span class="line">       return invoker;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>这个方法没什么好说的，就是Invoker的实例化而已，不过这个invoker已经有所有调用服务端的服务的必要参数。只需要通过invoker作为参数用ProxyFactory进行动态代理来拿到代理类就行了。</p>
+<h4 id="远程调用"><a href="#远程调用" class="headerlink" title="远程调用"></a>远程调用</h4><p>真正在方法调用时才会触发invoker的doInvoke方法，让我们看看这个doInvoke方法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">protected Result doInvoke(Invocation invocation) throws Throwable &#123;</span><br><span class="line">     RpcInvocation inv = (RpcInvocation)invocation;</span><br><span class="line">     String methodName = RpcUtils.getMethodName(invocation);</span><br><span class="line">     inv.setAttachment(&quot;path&quot;, this.getUrl().getPath());</span><br><span class="line">     inv.setAttachment(&quot;version&quot;, this.version);</span><br><span class="line">     //通信客户端，可以与socket的客户端类比</span><br><span class="line">     ExchangeClient currentClient;</span><br><span class="line">     if(this.clients.length == 1) &#123;</span><br><span class="line">         currentClient = this.clients[0];</span><br><span class="line">     &#125; else &#123;</span><br><span class="line">         currentClient = this.clients[this.index.getAndIncrement() % this.clients.length];</span><br><span class="line">     &#125;</span><br><span class="line"></span><br><span class="line">     try &#123;</span><br><span class="line">         boolean isAsync = RpcUtils.isAsync(this.getUrl(), invocation);</span><br><span class="line">         boolean isOneway = RpcUtils.isOneway(this.getUrl(), invocation);</span><br><span class="line">         int timeout = this.getUrl().getMethodParameter(methodName, &quot;timeout&quot;, 1000);</span><br><span class="line">         if(isOneway) &#123;</span><br><span class="line">             boolean isSent = this.getUrl().getMethodParameter(methodName, &quot;sent&quot;, false);</span><br><span class="line">             currentClient.send(inv, isSent);</span><br><span class="line">             RpcContext.getContext().setFuture((Future)null);</span><br><span class="line">             return new RpcResult();</span><br><span class="line">         &#125; else if(isAsync) &#123;</span><br><span class="line">             ResponseFuture future = currentClient.request(inv, timeout);</span><br><span class="line">             RpcContext.getContext().setFuture(new FutureAdapter(future));</span><br><span class="line">             return new RpcResult();</span><br><span class="line">         &#125; else &#123;</span><br><span class="line">             RpcContext.getContext().setFuture((Future)null);</span><br><span class="line">             return (Result)currentClient.request(inv, timeout).get();</span><br><span class="line">         &#125;</span><br><span class="line">     &#125; catch (TimeoutException var9) &#123;</span><br><span class="line">         throw new RpcException(2, &quot;Invoke remote method timeout. method: &quot; + invocation.getMethodName() + &quot;, provider: &quot; + this.getUrl() + &quot;, cause: &quot; + var9.getMessage(), var9);</span><br><span class="line">     &#125; catch (RemotingException var10) &#123;</span><br><span class="line">         throw new RpcException(1, &quot;Failed to invoke remote method: &quot; + invocation.getMethodName() + &quot;, provider: &quot; + this.getUrl() + &quot;, cause: &quot; + var10.getMessage(), var10);</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>这个方法也很简单，首先拿到远程调用的参数，比如方法名，调用路径，暴露服务的版本号（版本号不同无法调通），拿到了ExchangeClient后就开始了请求，这个请求分同步和异步，都是看你配置来的，如果是同步的就一直阻塞直到timeout或者结果返回，如果是异步那么直接返回一个ResponseFuture，等执行成功后提供回调。到这，从consumer的方法引用到方法执行都说完了。讲得比较精炼，把很多东西都给省略了，其实dubbo真的特别复杂，但是对于我个人来说只要了解原理就已经达到我的目的了，所以到这就可以了。其实还有一部分比较重要，那就是网络通信部分，dubbo用的是netty。等有空了可以去膜拜膜拜。</p>
 
       
     </div>
@@ -406,7 +417,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/volatile-多线程/" rel="tag"># volatile,多线程</a>
+            <a href="/tags/dubbo/" rel="tag"># dubbo</a>
           
         </div>
       
@@ -419,8 +430,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/12/07/Spring-boot学习之调用dubbo/" rel="next" title="Spring boot学习之调用dubbo">
-                <i class="fa fa-chevron-left"></i> Spring boot学习之调用dubbo
+              <a href="/2018/01/14/深入理解dubbo之服务发布源码分析/" rel="next" title="深入理解dubbo之服务发布源码分析">
+                <i class="fa fa-chevron-left"></i> 深入理解dubbo之服务发布源码分析
               </a>
             
           </div>
@@ -428,10 +439,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2017/06/21/elasticsearch5-x服务器搭建/" rel="prev" title="elasticsearch5.x服务器搭建">
-                elasticsearch5.x服务器搭建 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -568,7 +575,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#引言"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#可见性"><span class="nav-number">2.</span> <span class="nav-text">可见性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用场景"><span class="nav-number">3.</span> <span class="nav-text">使用场景</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#dubbo服务引用"><span class="nav-number">1.</span> <span class="nav-text">dubbo服务引用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SPI"><span class="nav-number">1.1.</span> <span class="nav-text">SPI</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#远程调用"><span class="nav-number">1.2.</span> <span class="nav-text">远程调用</span></a></li></ol></li></ol></div>
             
 
           </div>
