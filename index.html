@@ -266,6 +266,400 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/21/java HTTP多线程断点续传下载/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="赖峣">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="知之’s Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/07/21/java HTTP多线程断点续传下载/" itemprop="url">未命名</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-21T10:10:55+08:00">
+                2018-07-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2018/07/21/java HTTP多线程断点续传下载/" class="leancloud_visitors" data-flag-title="">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  1,274
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  6
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="java-HTTP多线程断点续传下载"><a href="#java-HTTP多线程断点续传下载" class="headerlink" title="java HTTP多线程断点续传下载"></a>java HTTP多线程断点续传下载</h1><p>tags: java,http</p>
+<p>HTTP协议可以说是当前最最重要的通信协议之一，HTTP协议作为应用层协议作用在TCP协议之上，是现在最广泛、最通用的通信协议。正因为如此，今天来说一说HTTP的<strong>断点续传</strong>功能。</p>
+<p><strong>断点续传</strong>：顾名思义就是说在数据传输时因网络原因出现下载中断，在这个时候可以在中断的地方继续下载而不需要重新下载。HTTP的断点续传原理比较简单，在HTTP1.1(RFC2616)中定义了断点续传相关的HTTP头<strong>Range</strong>和<strong>Content-Range</strong>字段。在请求某资源时，HTTP头加上Range头，如果服务器支持断点续传功能，那么你可以获取一个带有Content-Range的响应头的响应。</p>
+<p>断点续传：顾名思义就是说在数据传输时因网络原因出现下载中断，在这个时候可以在中断的地方继续下载而不需要重新下载。HTTP的断点续传原理比较简单，在HTTP1.1(RFC2616)中定义了断点续传相关的HTTP头Range和Content-Range字段。在请求某资源时，HTTP头加上Range头，如果服务器支持断点续传功能，那么你可以获取一个带有Content-Range的响应头的响应。</p>
+<p>一个HTTP断点续传基本步骤如下：</p>
+<ol>
+<li>客户端请求某资源，HTTP头加上Range头，如： Range:bytes=1024-2048； </li>
+<li>请求成功，服务器返回带COntent-Range响应头的响应，如：Content-Range:bytes 1024-2048/512000；</li>
+<li>此时网络中断，客户端已经记录了当前下载的进度。</li>
+<li>客户端继续请求资源，此时Range头将从2048开始。</li>
+<li>资源下载成功。<br>接下来看代码：</li>
+</ol>
+<pre><code>public class MultiDownloadProcessor {
+
+private String url;
+private String targetPath;
+private int threadCount;
+private long contentLength;
+private static final String FILE_WRITE_READ = &quot;rw&quot;;
+private static final String FILE_WRITE_READ_MODIFY = &quot;rwd&quot;;
+private static final String SUFFIX_TEMP = &quot;.tmp&quot;;
+private static final String RANGE_HEAD = &quot;Range&quot;;
+private static final int SNIFF_BYTES = 1024;
+private static final int BUFFER = 1024 * 1024;
+private static final String CONTENT_RANGE = &quot;Content-Range&quot;;
+private static final String CONTENT_RANGE_DASH = &quot;/&quot;;
+private static final int TEMP_FILE_SKIP = 8;
+
+public MultiDownloadProcessor(String url, String targetPath, int threadCount) {
+this.url = url;
+this.targetPath = targetPath;
+this.threadCount = threadCount;
+}
+
+public void download() throws Exception {
+long startTime = System.currentTimeMillis();
+boolean isRange = sniffDownload();
+System.out.println(&quot;contentLength:&quot; + this.contentLength);
+File file = new File(targetPath, getFileName(url));
+//提前初始化好要下载文件
+initFile(file);
+if (isRange) {
+//分片下载
+partialDownload(file);
+System.out.println(&quot;down!!!!!!,use time：&quot; + (System.currentTimeMillis() - startTime));
+}else {
+//......简单单线程下载
+}
+}
+
+private void partialDownload(File file) throws Exception {
+File tempFile = new File(targetPath, fetchFileName(url) + SUFFIX_TEMP);
+List&lt;FutureTask&lt;Boolean&gt;&gt; list = new ArrayList&lt;&gt;();
+if(contentLength&lt;=0) {
+throw new Exception(&quot;contentLength is illegal&quot;);
+}
+
+//分块下载，建议设一个阈值，大于这个值才多线程下载
+long blockSize = contentLength / threadCount;
+for (int threadId = 0; threadId &lt; threadCount; threadId++) {
+long startIndex = threadId * blockSize;
+long endIndex = (threadId + 1) * blockSize;
+if (threadId == (threadCount - 1)) {
+endIndex = contentLength - 1;
+}
+
+DownloadHandler downloadHandler = new DownloadHandler(threadId, startIndex, endIndex, file);
+FutureTask&lt;Boolean&gt; result = new FutureTask&lt;&gt;(downloadHandler);
+Thread thread = new Thread(result);
+thread.start();
+list.add(result);
+}
+
+for (FutureTask&lt;Boolean&gt; futureTask : list) {
+futureTask.get();
+}
+
+cleanTemp(tempFile);
+}
+
+private void initFile(File file) throws Exception {
+//做得更好可以进来就创建一个下载系统自己的下载文件名，当下载完成就把名字改为目标名，chrome就是这么做的
+RandomAccessFile randomAccessFile = null;
+if (!file.exists()) {
+randomAccessFile = new RandomAccessFile(file, FILE_WRITE_READ_MODIFY);
+randomAccessFile.setLength(contentLength);
+randomAccessFile.close();
+}
+}
+
+//嗅探下载，判断是否可分片下载
+private boolean sniffDownload() throws Exception {
+Set&lt;Header&gt; set = new HashSet&lt;&gt;();
+Header header = new BasicHeader(RANGE_HEAD, &quot;bytes=&quot; + 0 + &quot;-&quot; + SNIFF_BYTES);
+set.add(header);
+CloseableHttpResponse response = HttpUtils.doHttpGetResponse(url, set);
+int code = response.getStatusLine().getStatusCode();
+long currentLength = response.getEntity().getContentLength();
+response.close();
+if (code == HttpStatus.SC_PARTIAL_CONTENT) {
+String contentRange = getContentRange(response.getAllHeaders());
+if (!StringUtils.isEmpty(contentRange)) {
+this.contentLength = Long.valueOf(contentRange);
+return true;
+}
+
+return false;
+} else if (code &gt;= HttpStatus.SC_BAD_REQUEST) {
+throw new Exception(&quot;request download url failed,statusCode: &quot; + code);
+} else {
+this.contentLength = currentLength;
+return false;
+}
+}
+
+private String getContentRange(Header[] headers) {
+if (headers != null &amp;&amp; headers.length &gt; 0) {
+for (Header header : headers) {
+if (CONTENT_RANGE.equals(header.getName())) {
+String value = header.getValue();
+return value.substring(value.lastIndexOf(CONTENT_RANGE_DASH) + 1);
+}
+}
+}
+
+return null;
+}
+
+private String getFileName(String url) {
+
+if (!url.contains(&quot;.&quot;)) {
+return null;
+}
+
+if (url.contains(&quot;?&quot;)) {
+return url.substring(url.lastIndexOf(&quot;/&quot;) + 1, url.lastIndexOf(&quot;?&quot;));
+}
+
+return url.substring(url.lastIndexOf(&quot;/&quot;) + 1);
+}
+
+private String fetchFileName(String url) {
+return url.substring(url.lastIndexOf(&quot;/&quot;), url.lastIndexOf(&quot;.&quot;));
+}
+
+private class DownloadHandler implements Callable&lt;Boolean&gt; {
+
+private int threadId;
+private long startIndex;
+private long endIndex;
+private File file;
+
+
+public DownloadHandler(int threadId, long startIndex, long endIndex, File file) {
+this.threadId = threadId;
+this.startIndex = startIndex;
+this.endIndex = endIndex;
+this.file = file;
+
+}
+
+
+private void readTemp(File tempFile, int threadId) throws Exception {
+if (tempFile.exists()) {
+RandomAccessFile randomAccessFile = new RandomAccessFile(tempFile, &quot;r&quot;);
+long skip = threadId &lt;&lt; TEMP_FILE_SKIP;
+randomAccessFile.seek(skip);
+if (randomAccessFile.length() &lt; skip) return;
+long l = randomAccessFile.readLong();
+this.startIndex = l;
+randomAccessFile.close();
+}
+
+}
+
+private void writeTemp(File tempFile,int threadId,int downloadTotal) throws Exception {
+RandomAccessFile temp = new RandomAccessFile(tempFile, FILE_WRITE_READ_MODIFY);
+temp.seek(threadId &lt;&lt; TEMP_FILE_SKIP);
+temp.writeLong(this.startIndex + downloadTotal);
+temp.close();
+}
+
+private CloseableHttpResponse partialHttpRequest(String url, long startIndex, long endIndex) throws Exception {
+Set&lt;Header&gt; set = new HashSet&lt;&gt;();
+Header header = new BasicHeader(RANGE_HEAD, &quot;bytes=&quot; + startIndex + &quot;-&quot; + endIndex);
+set.add(header);
+CloseableHttpResponse response = HttpUtils.doHttpGetResponse(url, set);
+return response;
+}
+
+//使用callable而不是runnable方便捕获异常
+@Override
+public Boolean call() throws Exception {
+System.out.println(&quot;threadId:&quot; + threadId + &quot;start download&quot; + System.currentTimeMillis());
+CloseableHttpResponse response = null;
+RandomAccessFile targetFile = null;
+InputStream content = null;
+try {
+File tempFile = new File(targetPath, fetchFileName(url) + SUFFIX_TEMP);
+readTemp(tempFile, threadId);
+System.out.println(&quot;threadId:&quot; + threadId + &quot; startIndex:&quot; + startIndex + &quot; endIndex:&quot; + endIndex);
+response = partialHttpRequest(url, startIndex, endIndex);
+content = response.getEntity().getContent();
+targetFile = new RandomAccessFile(file, FILE_WRITE_READ_MODIFY);
+targetFile.seek(startIndex);
+byte[] buffer = new byte[BUFFER];
+int len = 0;
+int total = 0;//记录本次文件下载大小
+while ((len = content.read(buffer)) &gt; 0) {
+total += len;
+targetFile.write(buffer, 0, len);
+//记录当前线程下载进度
+writeTemp(tempFile,threadId,total);
+}
+
+System.out.println(System.currentTimeMillis() + &quot;threadId:&quot; + threadId + &quot;download finished! this time get total :&quot; + total + &quot; byte data&quot;);
+} finally {
+if (content != null) content.close();
+if (response != null) response.close();
+if (targetFile != null) targetFile.close();
+}
+
+return true;
+}
+}
+
+//删除线程产生的临时文件
+private synchronized void cleanTemp(File file) {
+if (file.exists()) {
+file.delete();
+}
+}
+}
+</code></pre>
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/29/记一次内存泄漏排查/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -918,172 +1312,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/14/elasticsearch实现中文分词和拼音分词混合查询-CompletionSuggestion/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="赖峣">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="知之’s Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/01/14/elasticsearch实现中文分词和拼音分词混合查询-CompletionSuggestion/" itemprop="url">elasticsearch实现中文分词和拼音分词混合查询+CompletionSuggestion</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-14T21:39:49+08:00">
-                2018-01-14
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-             <span id="/2018/01/14/elasticsearch实现中文分词和拼音分词混合查询-CompletionSuggestion/" class="leancloud_visitors" data-flag-title="elasticsearch实现中文分词和拼音分词混合查询+CompletionSuggestion">
-               <span class="post-meta-divider">|</span>
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               
-                 <span class="post-meta-item-text">阅读次数&#58;</span>
-               
-                 <span class="leancloud-visitors-count"></span>
-             </span>
-          
-
-          
-
-          
-            <div class="post-wordcount">
-              
-                
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-file-word-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">字数统计&#58;</span>
-                
-                <span title="字数统计">
-                  1,360
-                </span>
-              
-
-              
-                <span class="post-meta-divider">|</span>
-              
-
-              
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-clock-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
-                
-                <span title="阅读时长">
-                  7
-                </span>
-              
-            </div>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>之前已经介绍了如何搭建elasticsearch服务端和简单的索引创建，和中文分词的支持。今天我们来说一说如何实现elasticsearch同时实现中文分词和pinyin分词。并且实现类似百度搜索栏的搜索建议的功能。</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/01/14/elasticsearch实现中文分词和拼音分词混合查询-CompletionSuggestion/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1138,7 +1366,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1214,7 +1442,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">19.6k</span>
+    <span title="Site words total count">20.9k</span>
   
 </div>
 
