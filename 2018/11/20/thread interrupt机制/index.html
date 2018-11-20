@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="JAVA,内存泄漏," />
+  <meta name="keywords" content="thread,interrupt," />
 
 
 
@@ -79,18 +79,18 @@
 
 
 
-<meta name="description" content="引言最近公司一项目写完在进行压测，在压测过程中偶然top了几次，发现项目运行的进程占用的资源RES一直在缓慢增长。于是怀疑是存在内存泄漏。 用通俗的话来讲内存泄漏是由于开发人员没有注意到内存管理，没有有效的进行内存回收导致的一部分内存无法被回收，同时在系统运行过程中会不断有新的相关内存占用，最终导致Out of Memory。这种情况在C++ programmer中是非常头疼的一件事，因为C++把">
-<meta name="keywords" content="JAVA,内存泄漏">
+<meta name="description" content="最近在工作中碰到同事使用interrupt，刚好本人并没怎么用过这个interrupt机制，只知道这个方法是用来中断线程的，对于阻塞的线程，我们可以调用interrupt方法中断线程，并且还听说这个方法并不靠谱，今天对interrupt机制做个总结。 对于java语言来说，不会用一个api，最简单粗暴的方式就是去看看JDK源码，看看道格李大神的解释。在interrupt方法中第一句注释就是  In">
+<meta name="keywords" content="thread,interrupt">
 <meta property="og:type" content="article">
-<meta property="og:title" content="记一次内存泄漏排查">
-<meta property="og:url" content="http://yoursite.com/2018/04/29/记一次内存泄漏排查/index.html">
+<meta property="og:title" content="thread interrupt机制">
+<meta property="og:url" content="http://yoursite.com/2018/11/20/thread interrupt机制/index.html">
 <meta property="og:site_name" content="知之’s Blog">
-<meta property="og:description" content="引言最近公司一项目写完在进行压测，在压测过程中偶然top了几次，发现项目运行的进程占用的资源RES一直在缓慢增长。于是怀疑是存在内存泄漏。 用通俗的话来讲内存泄漏是由于开发人员没有注意到内存管理，没有有效的进行内存回收导致的一部分内存无法被回收，同时在系统运行过程中会不断有新的相关内存占用，最终导致Out of Memory。这种情况在C++ programmer中是非常头疼的一件事，因为C++把">
+<meta property="og:description" content="最近在工作中碰到同事使用interrupt，刚好本人并没怎么用过这个interrupt机制，只知道这个方法是用来中断线程的，对于阻塞的线程，我们可以调用interrupt方法中断线程，并且还听说这个方法并不靠谱，今天对interrupt机制做个总结。 对于java语言来说，不会用一个api，最简单粗暴的方式就是去看看JDK源码，看看道格李大神的解释。在interrupt方法中第一句注释就是  In">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-04-29T13:59:44.938Z">
+<meta property="og:updated_time" content="2018-11-20T13:50:04.317Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="记一次内存泄漏排查">
-<meta name="twitter:description" content="引言最近公司一项目写完在进行压测，在压测过程中偶然top了几次，发现项目运行的进程占用的资源RES一直在缓慢增长。于是怀疑是存在内存泄漏。 用通俗的话来讲内存泄漏是由于开发人员没有注意到内存管理，没有有效的进行内存回收导致的一部分内存无法被回收，同时在系统运行过程中会不断有新的相关内存占用，最终导致Out of Memory。这种情况在C++ programmer中是非常头疼的一件事，因为C++把">
+<meta name="twitter:title" content="thread interrupt机制">
+<meta name="twitter:description" content="最近在工作中碰到同事使用interrupt，刚好本人并没怎么用过这个interrupt机制，只知道这个方法是用来中断线程的，对于阻塞的线程，我们可以调用interrupt方法中断线程，并且还听说这个方法并不靠谱，今天对interrupt机制做个总结。 对于java语言来说，不会用一个api，最简单粗暴的方式就是去看看JDK源码，看看道格李大神的解释。在interrupt方法中第一句注释就是  In">
 
 
 
@@ -120,13 +120,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/04/29/记一次内存泄漏排查/"/>
+  <link rel="canonical" href="http://yoursite.com/2018/11/20/thread interrupt机制/"/>
 
 
 
 
 
-  <title>记一次内存泄漏排查 | 知之’s Blog</title>
+  <title>thread interrupt机制 | 知之’s Blog</title>
   
 
 
@@ -267,7 +267,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/29/记一次内存泄漏排查/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/20/thread interrupt机制/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="赖峣">
@@ -284,7 +284,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">记一次内存泄漏排查</h1>
+          <h1 class="post-title" itemprop="name headline">thread interrupt机制</h1>
         
 
         <div class="post-meta">
@@ -296,8 +296,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-29T21:52:42+08:00">
-                2018-04-29
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-20T18:52:01+08:00">
+                2018-11-20
               </time>
             
 
@@ -314,7 +314,7 @@
 
           
           
-             <span id="/2018/04/29/记一次内存泄漏排查/" class="leancloud_visitors" data-flag-title="记一次内存泄漏排查">
+             <span id="/2018/11/20/thread interrupt机制/" class="leancloud_visitors" data-flag-title="thread interrupt机制">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -339,7 +339,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1,244
+                  1,452
                 </span>
               
 
@@ -355,7 +355,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  5
+                  7
                 </span>
               
             </div>
@@ -376,29 +376,26 @@
       
 
       
-        <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>最近公司一项目写完在进行压测，在压测过程中偶然top了几次，发现项目运行的进程占用的资源RES一直在缓慢增长。于是怀疑是存在内存泄漏。</p>
-<p>用通俗的话来讲<strong>内存泄漏</strong>是由于开发人员没有注意到内存管理，没有有效的进行内存回收导致的一部分内存无法被回收，同时在系统运行过程中会不断有新的相关内存占用，最终导致Out of Memory。这种情况在C++ programmer中是非常头疼的一件事，因为C++把内存管理的权限交给了开发人员，但是对于Java开发人员来说会轻松很多，因为JVM自带GC收集器垃圾内存回收一般不需要开发人员关心。那么有人会问了，既然如此Java程序有可能会出现内存泄漏情况吗？答案是肯定的。那么为什么在有GC收集器的情况下还会有内存泄露呢？这还需要搞清楚JVM的垃圾回收的原理–什么样的对象会被认为是垃圾<br><a id="more"></a></p>
-<h3 id="垃圾回收算法"><a href="#垃圾回收算法" class="headerlink" title="垃圾回收算法"></a>垃圾回收算法</h3><p>Java的JVM种类繁多，以Hotspot JVM为例，Hotspot使用的是根搜索算法，根搜索算法基本原理是定义好一个或多个<strong>GC Root</strong>对象，从这些GC Root对象开始向下遍历该对象的引用对象，遍历走过的路径叫<strong>引用链</strong>，如果一个对象没有一条引用链可达，那么这个对象和其引用链都会被标记为垃圾，会被GC收集器回收掉。在JAVA语言中，可以作为GC Root的对象有如下几种：</p>
-<ul>
-<li>虚拟机栈（栈帧中d额本地变量表）中引用的对象</li>
-<li>方法区中静态属性引用的对象</li>
-<li>方法区中常量引用的对象</li>
-<li>本地方法栈JNI（native方法）的引用对象<br>了解了垃圾回收算法，我们就有理由相信JAVA程序也可能出现内存泄漏的，如果我们开发人员不注意写了一些对象被GC Root对象引用了，并且没有做内存释放操作，比如说一些集合的操作，尤其是类全局变量的集合，一有操作不慎就会造成内存泄漏。</li>
-</ul>
-<h3 id="排查过程"><a href="#排查过程" class="headerlink" title="排查过程"></a>排查过程</h3><p>说了这么多，现在来看看本人经历的一次内存泄露排查过程。背景上面已经介绍了，项目就是一个简单的netty程序。当发现可能有内存泄漏后，做的第一件事就是排查代码，毕竟是自己写的代码，自己最熟悉，在一通排查后并没有发现有明显集合数据添加了没有remove的操作，当时是懵逼的，因为有add就有正常remove，没办法只能祭出杀手锏使用jmap、jstat和三方内存泄漏分析工具–memory analyzer。 首先使用<strong>jstat -gcutil pid 6000</strong> 命令每6秒查看一次gc情况，观察一段时间后发现，项目运行一天后疯狂进行Full GC，这下可以断定绝对有内存泄露。然后使用<strong>jmap -histo:live pid | head -10</strong> 命令查看系统运行进程存活对象数量和占用内存前五的对象，如下图：</p>
-<pre><code>
- num     #instances         #bytes  class name
-----------------------------------------------
-   1:           278       16903672  [B
-   2:          8766         819424  [C
-   3:          3454         385560  java.lang.Class
-   4:          2777         305984  [Ljava.lang.Object;
-   5:          6858         219456  java.util.concurrent.ConcurrentHashMap$Node
-   6:          8716         209184  java.lang.String
-   7:          6438         103008  java.lang.Object
-</code></pre><p>发现排名第一多对象数量和占用内存最多的竟然是一个Long对象，这绝对有问题，一般没有内存泄漏的系统jmap出来的前五一般都是byte、char、string这些对象，知道这个Long有问题，本人又去代码中瞧了一眼，用了Long的地方都是正常的，有remove释放操作，为了进一步弄清到底是哪个地方出问题，我祭出了终极大法–Memory Analyzer。使用<strong>jmap -dump:format=b,file=文件名 [pid]</strong> 命令dump出来内存映像文件，然后扔进Memory Analyzer，进入histoGram，选择Long这个对象，右键选择with income object。可以找到引用链，最终发现是一个别的同事写的私用协议有个全局字段add到队列中但是没有remove，所以导致内存泄漏。</p>
-<p>对了，最后说一嘴之前我不是使用top看内存涨了么，其实使用top看是看不出什么的，因为就算没有内存泄漏，特么RES也是会涨的，因为JVM向操作系统要内存了之后，如果当前内存够，JVM是不会立马释放内存的，JVM还会占用这块内存当做缓存，防止数据高峰时又需要向操作系统要内存（因为系统调用是要时间和性能做代价的）。</p>
-
+        <p>最近在工作中碰到同事使用interrupt，刚好本人并没怎么用过这个interrupt机制，只知道这个方法是用来中断线程的，对于阻塞的线程，我们可以调用interrupt方法中断线程，并且还听说这个方法并不靠谱，今天对interrupt机制做个总结。</p>
+<p>对于java语言来说，不会用一个api，最简单粗暴的方式就是去看看JDK源码，看看道格李大神的解释。在interrupt方法中第一句注释就是</p>
+<blockquote>
+<p>Interrupts this thread.</p>
+</blockquote>
+<p>根据这个解释似乎这个interrupt就是给开发人员用来中断线程的。但是本人做了个小测试。测试代码如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">package rest;</span><br><span class="line"></span><br><span class="line">public class TestThread implements Runnable &#123;</span><br><span class="line"></span><br><span class="line">    private int count;</span><br><span class="line">    public TestThread(int count) &#123;</span><br><span class="line">        this.count=count;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void run() &#123;</span><br><span class="line">        for (int i=0;i&lt;count;i++)&#123;</span><br><span class="line">            System.out.println(&quot;current count is: &quot;+i);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        System.out.println(&quot;the thread: &quot;+Thread.currentThread().getName()+&quot; is end&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">package rest;</span><br><span class="line"></span><br><span class="line">public class TestInterrupt &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public static void main(String[] args)throws Exception&#123; </span><br><span class="line">        </span><br><span class="line">        TestThread testThread = new TestThread(10000);</span><br><span class="line">        Thread thread = new Thread(testThread);</span><br><span class="line">        thread.start();</span><br><span class="line">        Thread.sleep(10);</span><br><span class="line">        thread.interrupt();</span><br><span class="line">        System.out.println(&quot;1:::::&quot;+thread.isInterrupted());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这段代码很简单，就是创建个线程进行counter，启动线程之后让主线程sleep 10毫秒，再调用interrupt方法企图停止线程。但是结果大概各位都猜到了，testThread仿佛啥都没有发生直接运行到结束，并没有按照我们的想法中断。到底是什么情况，无法中止线程为啥还要提供这个方法出来呢？让我们带着问题去看看JDK源码。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line">     * Interrupts this thread.</span><br><span class="line">     *</span><br><span class="line">     * &lt;p&gt; Unless the current thread is interrupting itself, which is</span><br><span class="line">     * always permitted, the &#123;@link #checkAccess() checkAccess&#125; method</span><br><span class="line">     * of this thread is invoked, which may cause a &#123;@link</span><br><span class="line">     * SecurityException&#125; to be thrown.</span><br><span class="line">     *</span><br><span class="line">     * &lt;p&gt; If this thread is blocked in an invocation of the &#123;@link</span><br><span class="line">     * Object#wait() wait()&#125;, &#123;@link Object#wait(long) wait(long)&#125;, or &#123;@link</span><br><span class="line">     * Object#wait(long, int) wait(long, int)&#125; methods of the &#123;@link Object&#125;</span><br><span class="line">     * class, or of the &#123;@link #join()&#125;, &#123;@link #join(long)&#125;, &#123;@link</span><br><span class="line">     * #join(long, int)&#125;, &#123;@link #sleep(long)&#125;, or &#123;@link #sleep(long, int)&#125;,</span><br><span class="line">     * methods of this class, then its interrupt status will be cleared and it</span><br><span class="line">     * will receive an &#123;@link InterruptedException&#125;.</span><br><span class="line">     *</span><br><span class="line">     * &lt;p&gt; If this thread is blocked in an I/O operation upon an &#123;@link</span><br><span class="line">     * java.nio.channels.InterruptibleChannel InterruptibleChannel&#125;</span><br><span class="line">     * then the channel will be closed, the thread&apos;s interrupt</span><br><span class="line">     * status will be set, and the thread will receive a &#123;@link</span><br><span class="line">     * java.nio.channels.ClosedByInterruptException&#125;.</span><br><span class="line">     *</span><br><span class="line">     * &lt;p&gt; If this thread is blocked in a &#123;@link java.nio.channels.Selector&#125;</span><br><span class="line">     * then the thread&apos;s interrupt status will be set and it will return</span><br><span class="line">     * immediately from the selection operation, possibly with a non-zero</span><br><span class="line">     * value, just as if the selector&apos;s &#123;@link</span><br><span class="line">     * java.nio.channels.Selector#wakeup wakeup&#125; method were invoked.</span><br><span class="line">     *</span><br><span class="line">     * &lt;p&gt; If none of the previous conditions hold then this thread&apos;s interrupt</span><br><span class="line">     * status will be set. &lt;/p&gt;</span><br><span class="line">     *</span><br><span class="line">     * &lt;p&gt; Interrupting a thread that is not alive need not have any effect.</span><br><span class="line">     *</span><br><span class="line">     * @throws  SecurityException</span><br><span class="line">     *          if the current thread cannot modify this thread</span><br><span class="line">     *</span><br><span class="line">     * @revised 6.0</span><br><span class="line">     * @spec JSR-51</span><br><span class="line">     */</span><br><span class="line">    public void interrupt() &#123;</span><br><span class="line">        if (this != Thread.currentThread())</span><br><span class="line">            checkAccess();</span><br><span class="line"></span><br><span class="line">        synchronized (blockerLock) &#123;</span><br><span class="line">            Interruptible b = blocker;</span><br><span class="line">            if (b != null) &#123;</span><br><span class="line">                interrupt0();           // Just to set the interrupt flag</span><br><span class="line">                b.interrupt(this);</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        interrupt0();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>这个interrupt方法很简单，就只有十几行代码，初看这个代码还是有几点不明白的，第一：Interruptible是什么鬼，有什么作用？第二：interrupt0()方法又是什么作用？第二点很好回答，因为代码后面注释就说了</p>
+<blockquote>
+<p>Just to set the interrupt flag </p>
+</blockquote>
+<p>interrupt0方法就是设置中断标志位。<br>再看看interrupt()上面的注释后我们应该可以解答。注释大概意思是如果当前线程调用了sleep()/wait()/join()方法，中断状态标志会被清除，并且线程会接收一个中断异常。翻译成中文就是说当前线程阻塞了，如果你调用了interrupt方法，这个线程就会被中断，并且抛出中断异常。<br>结合Interruptible的注释</p>
+<blockquote>
+<p>The object in which this thread is blocked in an interruptible I/O operation, if any.  The blocker’s interrupt method should be invoked after setting this thread’s interrupt status.</p>
+</blockquote>
+<p>意思是说在可中断的I/O操作（如果有的话）中阻止该线程的对象。在设置线程中断状态后，应调用拦截器的中断方法。<br>这么来看，而sleep()/wait()/join()就是所说的可中断的操作，所以调用了sleep()/wait()/join()方法后<strong>Interruptible b = blocker</strong>中的b是不为空的，并且会先行设置当前线程的中断标志位，所以会执行if语句中的代码调用interrupt0方法来清除中断状态标志位<br>然后调用Interruptible的interrupt方法真正的中断当前线程。</p>
+<p>敲重点！！<strong>也就是说非注释上说的这些阻塞方法调用或者可中断I/O调用，你使用thread对象的interrupt()方法是不能中断线程的</strong>interrupt0()这个方法只是设置中断标志而已，并没有什么*用。那么有人要问了，那正常运行的线程我想中断停止它怎么办？很正常的需求啊，很多业务都很可能要这个需求，比如我用多个线程去抢一张火车票，有一个线程抢到了我就可以直接终止其他线程。我会建议你使用自定义的一个标志位，这个标志位用volatile修饰让标志具有可见性。简单的例子如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">public class TestThread implements Runnable &#123;</span><br><span class="line"></span><br><span class="line">    private int count;</span><br><span class="line">    private volatile boolean stop=false;</span><br><span class="line"></span><br><span class="line">    public TestThread(int count) &#123;</span><br><span class="line">        this.count=count;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void shutdownNow()&#123;</span><br><span class="line">        this.stop=true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void run() &#123;</span><br><span class="line">        for (int i=0;i&lt;count;i++)&#123;</span><br><span class="line">            System.out.println(&quot;current count is: &quot;+i);</span><br><span class="line">            if(stop) &#123;</span><br><span class="line">                System.out.println(&quot;aaaa i&apos;m be stoped!!!&quot;);</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        System.out.println(&quot;the thread: &quot;+Thread.currentThread().getName()+&quot; is end&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">public class TestInterrupt &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public static void main(String[] args)throws Exception&#123;</span><br><span class="line">        TestThread testThread = new TestThread(10000);</span><br><span class="line">    Thread thread = new Thread(testThread);</span><br><span class="line">    thread.start();</span><br><span class="line">    Thread.sleep(10);</span><br><span class="line">    testThread.shutdownNow();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
       
     </div>
     
@@ -415,7 +412,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/JAVA-内存泄漏/" rel="tag"># JAVA,内存泄漏</a>
+            <a href="/tags/thread-interrupt/" rel="tag"># thread,interrupt</a>
           
         </div>
       
@@ -428,8 +425,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/01/14/深入理解dubbo之服务引用源码分析/" rel="next" title="深入理解dubbo之服务引用源码分析">
-                <i class="fa fa-chevron-left"></i> 深入理解dubbo之服务引用源码分析
+              <a href="/2018/07/21/java HTTP多线程断点续传下载/" rel="next" title="java HTTP多线程断点续传下载">
+                <i class="fa fa-chevron-left"></i> java HTTP多线程断点续传下载
               </a>
             
           </div>
@@ -437,10 +434,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/07/21/java HTTP多线程断点续传下载/" rel="prev" title="java HTTP多线程断点续传下载">
-                java HTTP多线程断点续传下载 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -492,17 +485,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            站点概览
-          </li>
-        </ul>
-      
 
-      <section class="site-overview-wrap sidebar-panel">
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -567,22 +551,6 @@
         </div>
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#引言"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#垃圾回收算法"><span class="nav-number">2.</span> <span class="nav-text">垃圾回收算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#排查过程"><span class="nav-number">3.</span> <span class="nav-text">排查过程</span></a></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
