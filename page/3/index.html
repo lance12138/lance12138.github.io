@@ -266,7 +266,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/12/07/Spring-boot学习之调用dubbo/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/14/深入理解dubbo之服务引用源码分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="赖峣">
@@ -285,7 +285,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2016/12/07/Spring-boot学习之调用dubbo/" itemprop="url">Spring boot学习之调用dubbo</a></h1>
+                <a class="post-title-link" href="/2018/01/14/深入理解dubbo之服务引用源码分析/" itemprop="url">深入理解dubbo之服务引用源码分析</a></h1>
         
 
         <div class="post-meta">
@@ -297,8 +297,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-12-07T22:37:32+08:00">
-                2016-12-07
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-14T22:06:08+08:00">
+                2018-01-14
               </time>
             
 
@@ -315,7 +315,7 @@
 
           
           
-             <span id="/2016/12/07/Spring-boot学习之调用dubbo/" class="leancloud_visitors" data-flag-title="Spring boot学习之调用dubbo">
+             <span id="/2018/01/14/深入理解dubbo之服务引用源码分析/" class="leancloud_visitors" data-flag-title="深入理解dubbo之服务引用源码分析">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -340,7 +340,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  302
+                  2,646
                 </span>
               
 
@@ -356,7 +356,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  1
+                  12
                 </span>
               
             </div>
@@ -378,178 +378,10 @@
 
       
         
-          
-            <p>Spring boot好早之前就有在用，但是都是用Spring boot建简单的web站点，很多Spring boot其他特性的使用都处于未知状态，最近又开始使用Spring boot开发，特此记录。</p>
-<h3 id="使用-Import注解引入配置文件"><a href="#使用-Import注解引入配置文件" class="headerlink" title="使用@Import注解引入配置文件"></a>使用@Import注解引入配置文件</h3><p>Spring boot最好用的一点就是自动配置，约定大于配置的特性让我们减少了很多配置工作，但是有很多情况下是不能自动配置的，比如dubbo就没有，所以dubbo的引入依旧需要配置文件，Spring boot要使配置文件生效需要引入配置文件，引入方式如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">@SpringBootApplication</span><br><span class="line">@Import(&quot;classpath:*.xml&quot;)</span><br><span class="line">public class App&#123;</span><br><span class="line">    </span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        SpringApplication.run(App.class,args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h3 id="使用CommandLineRunner接口"><a href="#使用CommandLineRunner接口" class="headerlink" title="使用CommandLineRunner接口"></a>使用CommandLineRunner接口</h3><p>在开发时经常会有在项目启动后就初始化模块、或者执行一次的需求，这时<em>CommandLineRunner</em>就是一个很好的选择，该接口有<code>run()</code>方法当实现了<em>CommandLineRunner</em>接口,项目启动之后会首先执行run方法。例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">@Component</span><br><span class="line">public class StartupRunner implements CommandLineRunner &#123;</span><br><span class="line">    protected final Logger logger = LoggerFactory.getLogger(StartupRunner.class);</span><br><span class="line">    @Override</span><br><span class="line">    public void run(String... strings) throws Exception &#123;</span><br><span class="line">        logger.info(&quot;you are invoke this method!&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/11/18/使用spring方式引如外部文件/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="赖峣">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="知之’s Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2016/11/18/使用spring方式引如外部文件/" itemprop="url">使用spring方式引入外部文件</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-11-18T23:03:23+08:00">
-                2016-11-18
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-             <span id="/2016/11/18/使用spring方式引如外部文件/" class="leancloud_visitors" data-flag-title="使用spring方式引入外部文件">
-               <span class="post-meta-divider">|</span>
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               
-                 <span class="post-meta-item-text">阅读次数&#58;</span>
-               
-                 <span class="leancloud-visitors-count"></span>
-             </span>
-          
-
-          
-
-          
-            <div class="post-wordcount">
-              
-                
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-file-word-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">字数统计&#58;</span>
-                
-                <span title="字数统计">
-                  478
-                </span>
-              
-
-              
-                <span class="post-meta-divider">|</span>
-              
-
-              
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-clock-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
-                
-                <span title="阅读时长">
-                  2
-                </span>
-              
-            </div>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <blockquote>
-<p>在很多业务场景下我们都需要引入外部文件，比如大量的静态json、业务模板、xml文件等，大量的外部文件引入如果方式不正确很有可能会导致系统性能问题，今天我们就说说如何使用优雅的方式引入外部文件。</p>
-</blockquote>
-<h4 id="传统引入方式"><a href="#传统引入方式" class="headerlink" title="传统引入方式"></a>传统引入方式</h4><p>一般我们引入外部文件都是通过IO流的方式引入，每次使用都要从硬盘读到内存中。代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">public String readFile()&#123;</span><br><span class="line">        File file=new File(&quot;test.txt&quot;);</span><br><span class="line">        BufferedReader reader=new BufferedReader(new InputStreamReader(new FileInputStream(file)));</span><br><span class="line">        StringBuffer sb=new StringBuffer();</span><br><span class="line">        String temp=null;</span><br><span class="line">        while((temp=reader.readLine())!=null)&#123;</span><br><span class="line">            sb.append(temp);</span><br><span class="line">        &#125;</span><br><span class="line">        reader.close();</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
-<p>该代码缺陷在于，每用一次就要从硬盘读取到内存，性能着急，这样的代码是不行的。<br>
+          <p>在之前说了一下dubbo的服务发布过程，其实严格意义上只说了一半吧，只把dubbo如何经过ProxyFactory的代理成一个Invoker，等待客户端调用的过程讲了一遍，而重要的Protocol.export方法略过去了，今天我将连带dubbo的comsumer客户端服务引用和Protocol机制来讲一讲。</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2016/11/18/使用spring方式引如外部文件/#more" rel="contents">
+            <a class="btn" href="/2018/01/14/深入理解dubbo之服务引用源码分析/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -600,7 +432,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/10/30/pageSpringMVC源码分析之Handler请求映射与调用/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/14/深入理解dubbo之服务发布源码分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="赖峣">
@@ -619,7 +451,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2016/10/30/pageSpringMVC源码分析之Handler请求映射与调用/" itemprop="url">SpringMVC源码分析之Handler请求映射与调用</a></h1>
+                <a class="post-title-link" href="/2018/01/14/深入理解dubbo之服务发布源码分析/" itemprop="url">深入理解dubbo之服务发布源码分析</a></h1>
         
 
         <div class="post-meta">
@@ -631,8 +463,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-10-30T21:50:42+08:00">
-                2016-10-30
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-14T22:03:43+08:00">
+                2018-01-14
               </time>
             
 
@@ -649,7 +481,7 @@
 
           
           
-             <span id="/2016/10/30/pageSpringMVC源码分析之Handler请求映射与调用/" class="leancloud_visitors" data-flag-title="SpringMVC源码分析之Handler请求映射与调用">
+             <span id="/2018/01/14/深入理解dubbo之服务发布源码分析/" class="leancloud_visitors" data-flag-title="深入理解dubbo之服务发布源码分析">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -674,7 +506,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  924
+                  2,577
                 </span>
               
 
@@ -690,7 +522,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  4
+                  11
                 </span>
               
             </div>
@@ -712,11 +544,10 @@
 
       
         
-          <p>在前两篇说了springMVC的初始化和HandlerMapping，接下来我们用最后一篇说说handler被映射和调用的过程。在说过初始化和HandlerMapping的注册过程后，springMVC的映射和调用就很简单了。</p>
-<h4 id="请求映射Handler"><a href="#请求映射Handler" class="headerlink" title="请求映射Handler"></a>请求映射Handler</h4><p>当一个请求发出后，比如我们发出一个”<a href="http://localhost:8080/pay/payment&quot;的请求，springMVC会先将路径封装到HttpServletRequest中，而spring容器会通过getHandler方法来通过路径找到上一篇说的已经注册好的HandlerMapping。请看如下代码：" target="_blank" rel="noopener">http://localhost:8080/pay/payment&quot;的请求，springMVC会先将路径封装到HttpServletRequest中，而spring容器会通过getHandler方法来通过路径找到上一篇说的已经注册好的HandlerMapping。请看如下代码：</a><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception &#123;</span><br><span class="line">		HttpServletRequest processedRequest = request;</span><br><span class="line">		HandlerExecutionChain mappedHandler = null;</span><br><span class="line">		boolean multipartRequestParsed = false;</span><br><span class="line"></span><br><span class="line">		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);</span><br><span class="line"></span><br><span class="line">		try &#123;</span><br><span class="line">			ModelAndView mv = null;</span><br><span class="line">			Exception dispatchException = null;</span><br><span class="line"></span><br><span class="line">			try &#123;</span><br><span class="line">				processedRequest = checkMultipart(request);</span><br><span class="line">				multipartRequestParsed = (processedRequest != request);</span><br><span class="line"></span><br><span class="line">				// 找到当前请求的handler.</span><br><span class="line">				mappedHandler = getHandler(processedRequest);</span><br><span class="line">				if (mappedHandler == null || mappedHandler.getHandler() == null) &#123;</span><br><span class="line">				//未找到handler抛出异常</span><br><span class="line">					noHandlerFound(processedRequest, response);</span><br><span class="line">					return;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				// 找到handler之后，为该handler匹配正确的适配器</span><br><span class="line">				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());</span><br><span class="line"></span><br><span class="line">................截取部分代码</span><br></pre></td></tr></table></figure></p>
+          <p>dubbo 是阿里开源的一个分布式服务框架，它的最大特点是按照分层的方式来架构，使各层之间充分解耦，并且它是无侵入性的，dubbo可以无缝与spring整合，更重要的是dubbo还提供了强大的容错和监控功能。 对于业务方来说，dubbo使用上手足够简单，调用过程对业务方透明，对开发人员友好。</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2016/10/30/pageSpringMVC源码分析之Handler请求映射与调用/#more" rel="contents">
+            <a class="btn" href="/2018/01/14/深入理解dubbo之服务发布源码分析/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -767,7 +598,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/09/16/springMVC源码分析之HandlerMapping请求映射/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/14/elasticsearch5-3-0-索引创建及查询/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="赖峣">
@@ -786,7 +617,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2016/09/16/springMVC源码分析之HandlerMapping请求映射/" itemprop="url">springMVC源码分析之HandlerMapping请求映射</a></h1>
+                <a class="post-title-link" href="/2018/01/14/elasticsearch5-3-0-索引创建及查询/" itemprop="url">elasticsearch5.3.0 索引创建及查询</a></h1>
         
 
         <div class="post-meta">
@@ -798,8 +629,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-09-16T18:52:01+08:00">
-                2016-09-16
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-14T22:00:07+08:00">
+                2018-01-14
               </time>
             
 
@@ -816,7 +647,7 @@
 
           
           
-             <span id="/2016/09/16/springMVC源码分析之HandlerMapping请求映射/" class="leancloud_visitors" data-flag-title="springMVC源码分析之HandlerMapping请求映射">
+             <span id="/2018/01/14/elasticsearch5-3-0-索引创建及查询/" class="leancloud_visitors" data-flag-title="elasticsearch5.3.0 索引创建及查询">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -841,7 +672,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  901
+                  1,044
                 </span>
               
 
@@ -857,7 +688,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  4
+                  5
                 </span>
               
             </div>
@@ -879,11 +710,10 @@
 
       
         
-          <p>在上一篇我们说了springMVC的初始化，作为springMVC启动的第一步完成的任务是初始化spring的IoC容器、初始化DispatchServlet的IoC容器，同时将webApplicationContext进行初始化，接下来就是strategy的初始化。这一系列初始化后接下来就是要完成根据url来映射到对应的具体方法并调用到最后返回页面。在接下的的两篇博文中我会分两篇来说说springMVC具体的映射分析。</p>
-<h4 id="Handler注册"><a href="#Handler注册" class="headerlink" title="Handler注册"></a>Handler注册</h4><p>在springMVC中最后一步是初始化strategy，就是初始化各个解析器如HandlerMapping和handlerAdapter。这是springMVC各配件初始化的入口。而initStrategies方法中initHandlerMapping是handlerMapping初始化的入口，该方法逻辑比较简单，首先从ApplicationContext中找到所有的HandlerMapping，如果没有则使用默认的HandlerMapping –DefaultAnnonationHandlerMapping、BeanNameUrlHandlerMapping。具体请看下面源码<br>
+          <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>上篇文章介绍了elasticsearch5.3.0服务器搭建，接下来说说elasticsearch的java客户端对数据的索引创建和对数据的查询。虽说现在es的api使用文档不少，但是5.3.0版本的太新了，许多都不兼容老版本，所以有了这篇博文。elasticsearch允许HTTP Restful的方式进行数据访问和操作，也同样允许通过JAVA API来访问服务器，HTTP Restful方式官方网站有很详细的说明在这就不罗嗦了，先看如何使用JAVA API来访问服务器。</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2016/09/16/springMVC源码分析之HandlerMapping请求映射/#more" rel="contents">
+            <a class="btn" href="/2018/01/14/elasticsearch5-3-0-索引创建及查询/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -934,7 +764,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/09/04/SpringMVC源码分析之初始化/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/14/elasticsearch实现中文分词和拼音分词混合查询-CompletionSuggestion/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="赖峣">
@@ -953,7 +783,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2016/09/04/SpringMVC源码分析之初始化/" itemprop="url">springMVC源码分析之初始化</a></h1>
+                <a class="post-title-link" href="/2018/01/14/elasticsearch实现中文分词和拼音分词混合查询-CompletionSuggestion/" itemprop="url">elasticsearch实现中文分词和拼音分词混合查询+CompletionSuggestion</a></h1>
         
 
         <div class="post-meta">
@@ -965,8 +795,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-09-04T21:41:17+08:00">
-                2016-09-04
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-14T21:39:49+08:00">
+                2018-01-14
               </time>
             
 
@@ -983,7 +813,7 @@
 
           
           
-             <span id="/2016/09/04/SpringMVC源码分析之初始化/" class="leancloud_visitors" data-flag-title="springMVC源码分析之初始化">
+             <span id="/2018/01/14/elasticsearch实现中文分词和拼音分词混合查询-CompletionSuggestion/" class="leancloud_visitors" data-flag-title="elasticsearch实现中文分词和拼音分词混合查询+CompletionSuggestion">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -1008,7 +838,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1,431
+                  1,360
                 </span>
               
 
@@ -1024,7 +854,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  6
+                  7
                 </span>
               
             </div>
@@ -1046,11 +876,177 @@
 
       
         
-          <p>springMVC属于SpringFrameWork家族中的一员，目前已经是最流行的和效率最好的MVC框架了，特别是配合spring的bean管理容器使用能让你很优雅的开发WEB应用。从这篇开始本人会从springMVC的初始化、springMVC的Controller调用过程、springMVC的视图解析过程、springMVC拦截器原理来分析源码，而今天就让我们先来领教一下springMVC的初始化吧。</p>
-<h4 id="springMVC配置"><a href="#springMVC配置" class="headerlink" title="springMVC配置"></a>springMVC配置</h4><p>在开始源码分析前，我们先来看看springMVC的配置文件和web.xml的配置方便接下来de分析。首先是spring-servlet.xml（配置文件什么名字都可以）<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;</span><br><span class="line">       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:p=&quot;http://www.springframework.org/schema/p&quot;</span><br><span class="line">       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;</span><br><span class="line">       xsi:schemaLocation=&quot;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd</span><br><span class="line">       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd</span><br><span class="line">       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd</span><br><span class="line">       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd&quot;&gt;</span><br><span class="line"></span><br><span class="line">    &lt;context:annotation-config/&gt;</span><br><span class="line">    &lt;context:component-scan base-package=&quot;com.ifenqu.controller&quot;/&gt;</span><br><span class="line">    &lt;bean class=&quot;org.springframework.web.servlet.view.InternalResourceViewResolver&quot; p:suffix=&quot;.jsp&quot;&gt;</span><br><span class="line">    &lt;/bean&gt;</span><br><span class="line">    &lt;/beans&gt;</span><br></pre></td></tr></table></figure></p>
+          <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>之前已经介绍了如何搭建elasticsearch服务端和简单的索引创建，和中文分词的支持。今天我们来说一说如何实现elasticsearch同时实现中文分词和pinyin分词。并且实现类似百度搜索栏的搜索建议的功能。</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2016/09/04/SpringMVC源码分析之初始化/#more" rel="contents">
+            <a class="btn" href="/2018/01/14/elasticsearch实现中文分词和拼音分词混合查询-CompletionSuggestion/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/09/21/spring-boot启动流程/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="赖峣">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="知之’s Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/09/21/spring-boot启动流程/" itemprop="url">spring boot启动流程</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-21T21:50:54+08:00">
+                2017-09-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2017/09/21/spring-boot启动流程/" class="leancloud_visitors" data-flag-title="spring boot启动流程">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  2,003
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  9
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>早在15年的时候就开始用spring boot进行开发了，然而一直就只是用用，并没有深入去了解spring boot是以什么原理怎样工作的，说来也惭愧。今天让我们从spring boot启动开始，深入了解一下spring boot的工作原理。</p>
+<p><img src="/images/springboot.png" alt="springboot"></p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/09/21/spring-boot启动流程/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1092,7 +1088,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1142,7 +1138,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-count">25</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1155,7 +1151,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-count">19</span>
                   <span class="site-state-item-name">标签</span>
                 
               </div>
@@ -1204,7 +1200,7 @@
       <div class="footer-inner">
         
 <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-<div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+<div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
@@ -1218,7 +1214,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">22.4k</span>
+    <span title="Site words total count">41.0k</span>
   
 </div>
 

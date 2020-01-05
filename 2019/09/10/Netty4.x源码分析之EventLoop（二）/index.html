@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="JAVA,Netty,NIO," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="引言在上篇文章我们分析了EventLoop的两大核心NioEventLoopGroup和NioEventLoop，NioEventLoopGroup在其父类MultithreadEventExecutor中维护了NioEventLoop数组，而NioEventLoop首先内部持有线程对象，所以NioEventLoopGroup是个线程池，并且上篇文章我们也分析了NioEventLoop除了是个单线">
+<meta name="keywords" content="JAVA,Netty,NIO">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Netty4.x源码分析之EventLoop（二）">
+<meta property="og:url" content="http://yoursite.com/2019/09/10/Netty4.x源码分析之EventLoop（二）/index.html">
+<meta property="og:site_name" content="知之’s Blog">
+<meta property="og:description" content="引言在上篇文章我们分析了EventLoop的两大核心NioEventLoopGroup和NioEventLoop，NioEventLoopGroup在其父类MultithreadEventExecutor中维护了NioEventLoop数组，而NioEventLoop首先内部持有线程对象，所以NioEventLoopGroup是个线程池，并且上篇文章我们也分析了NioEventLoop除了是个单线">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-01-05T03:25:13.959Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Netty4.x源码分析之EventLoop（二）">
+<meta name="twitter:description" content="引言在上篇文章我们分析了EventLoop的两大核心NioEventLoopGroup和NioEventLoop，NioEventLoopGroup在其父类MultithreadEventExecutor中维护了NioEventLoop数组，而NioEventLoop首先内部持有线程对象，所以NioEventLoopGroup是个线程池，并且上篇文章我们也分析了NioEventLoop除了是个单线">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/09/10/Netty4.x源码分析之EventLoop（二）/"/>
+
+
+
+
+
+  <title>Netty4.x源码分析之EventLoop（二） | 知之’s Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">知之’s Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">to be a better man</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/10/Netty4.x源码分析之EventLoop（二）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="赖峣">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="知之’s Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Netty4.x源码分析之EventLoop（二）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-10T20:15:32+08:00">
+                2019-09-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2019/09/10/Netty4.x源码分析之EventLoop（二）/" class="leancloud_visitors" data-flag-title="Netty4.x源码分析之EventLoop（二）">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  3,372
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  16
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>在上篇文章我们分析了EventLoop的两大核心NioEventLoopGroup和NioEventLoop，NioEventLoopGroup在其父类MultithreadEventExecutor中维护了NioEventLoop数组，而NioEventLoop首先内部持有线程对象，所以NioEventLoopGroup是个线程池，并且上篇文章我们也分析了NioEventLoop除了是个单线程，并且也是它执行了I/O的事件循环，没错就是它自己的run方法里面的逻辑，今天我们专门深入到这块事件循环里面，看看Netty是怎么做的。<br><a id="more"></a></p>
+<h3 id="NioEventLoop事件循环"><a href="#NioEventLoop事件循环" class="headerlink" title="NioEventLoop事件循环"></a>NioEventLoop事件循环</h3><p>回顾一下上篇文章NioEventLoop启动是通过Channel注册到selector上时执行execute方法触发startThread()方法启动的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">    public void execute(Runnable task) &#123;</span><br><span class="line">        if (task == null) &#123;</span><br><span class="line">            throw new NullPointerException(&quot;task&quot;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        boolean inEventLoop = inEventLoop();</span><br><span class="line">        if (inEventLoop) &#123;</span><br><span class="line">            addTask(task);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            startThread();</span><br><span class="line">            addTask(task);</span><br><span class="line">            if (isShutdown() &amp;&amp; removeTask(task)) &#123;</span><br><span class="line">                reject();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (!addTaskWakesUp &amp;&amp; wakesUpForTask(task)) &#123;</span><br><span class="line">            wakeup(inEventLoop);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>而这个startThread方法先是调用threadFactory创建一个线程，然后往线程提交一任务，而任务里面直接调用了NioEventLoop的run方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">private void startThread() &#123;</span><br><span class="line">        if (state == ST_NOT_STARTED) &#123;</span><br><span class="line">            if (STATE_UPDATER.compareAndSet(this, ST_NOT_STARTED, ST_STARTED)) &#123;</span><br><span class="line">                doStartThread();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void doStartThread() &#123;</span><br><span class="line">        assert thread == null;</span><br><span class="line">        executor.execute(new Runnable() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void run() &#123;</span><br><span class="line">                thread = Thread.currentThread();</span><br><span class="line">                if (interrupted) &#123;</span><br><span class="line">                    thread.interrupt();</span><br><span class="line">                &#125;</span><br><span class="line">                try &#123;</span><br><span class="line">                    SingleThreadEventExecutor.this.run();</span><br><span class="line">                    success = true;</span><br><span class="line">                &#125; catch (Throwable t) &#123;</span><br><span class="line">                    logger.warn(&quot;Unexpected exception from an event executor: &quot;, t);</span><br><span class="line">                    &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">//删除无关代码</span><br></pre></td></tr></table></figure>
+<p>而这个run方法就是时间循环的核心，我们着重看看这个run方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">protected void run() &#123;</span><br><span class="line">        for (;;) &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                switch (selectStrategy.calculateStrategy(selectNowSupplier, hasTasks())) &#123;</span><br><span class="line">                    case SelectStrategy.CONTINUE:</span><br><span class="line">                        continue;</span><br><span class="line">                    case SelectStrategy.SELECT:</span><br><span class="line">                        select(wakenUp.getAndSet(false));</span><br><span class="line"></span><br><span class="line">                        if (wakenUp.get()) &#123;</span><br><span class="line">                            selector.wakeup();</span><br><span class="line">                        &#125;</span><br><span class="line">                    default:</span><br><span class="line">                        // fallthrough</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                cancelledKeys = 0;</span><br><span class="line">                needsToSelectAgain = false;</span><br><span class="line">                final int ioRatio = this.ioRatio;</span><br><span class="line">                if (ioRatio == 100) &#123;</span><br><span class="line">                    try &#123;</span><br><span class="line">                        processSelectedKeys();</span><br><span class="line">                    &#125; finally &#123;</span><br><span class="line">                        // Ensure we always run tasks.</span><br><span class="line">                        runAllTasks();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    final long ioStartTime = System.nanoTime();</span><br><span class="line">                    try &#123;</span><br><span class="line">                        processSelectedKeys();</span><br><span class="line">                    &#125; finally &#123;</span><br><span class="line">                        // Ensure we always run tasks.</span><br><span class="line">                        final long ioTime = System.nanoTime() - ioStartTime;</span><br><span class="line">                        runAllTasks(ioTime * (100 - ioRatio) / ioRatio);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; catch (Throwable t) &#123;</span><br><span class="line">                handleLoopException(t);</span><br><span class="line">            &#125;</span><br><span class="line">            // Always handle shutdown even if the loop processing threw an exception.</span><br><span class="line">            try &#123;</span><br><span class="line">                if (isShuttingDown()) &#123;</span><br><span class="line">                    closeAll();</span><br><span class="line">                    if (confirmShutdown()) &#123;</span><br><span class="line">                        return;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; catch (Throwable t) &#123;</span><br><span class="line">                handleLoopException(t);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到run方法里面直接<code>for (;;)</code>一个忙循环开始一直保持这个Thread进行事件循环保证当前线程可以一直处理注册在当前线程的selector出来的I/O事件。接下来是个switch判断，我们来看看<code>selectStrategy.calculateStrategy(selectNowSupplier, hasTasks())</code>这个方法，selectStrategy这个对象是个接口，实现类是子类创建默认的实例传上来的DefaultSelectStrategy，我们看下这个方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"> private final IntSupplier selectNowSupplier = new IntSupplier() &#123;</span><br><span class="line">        @Override</span><br><span class="line">        public int get() throws Exception &#123;</span><br><span class="line">            return selectNow();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    </span><br><span class="line">@Override</span><br><span class="line">    public int calculateStrategy(IntSupplier selectSupplier, boolean hasTasks) throws Exception &#123;</span><br><span class="line">        return hasTasks ? selectSupplier.get() : SelectStrategy.SELECT;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>这个方法传入一个IntSupplier对象和boolean值德 hasTasks，方法也很简单如果队列里面有任务那么直接调用selectSupplier.get()方法返回，否则返回SelectStrategy.SELECT。这个IntSupplier我也在在上面代码列出来了，调用selectSupplier.get()方法其实是直接调用了selectNow()方法，这个selectNow()方法并不是阻塞的，而是里吗select一把之后立即返回，为什么在队列里面有任务时进行selectNow()而不是调用Select阻塞线程呢？这是因为Netty的EventLoop不仅是个I/O线程处理I/O事件，它还是个任务线程，处理用户提交或者netty自己提交的任务。如果任务队列里面有任务，执行select把线程阻塞了，用户提交的业务任务永远都得不到执行，所以在这里会做一个判断如果有任务在队列里直接select一把后再执行队列里面的任务。如果队列里面没有任务那么返回SelectStrategy.SELECT，switch代码块执行到<code>select(wakenUp.getAndSet(false));</code>调用这个方法首先会把线程的wakenUp状态设为false，表示我要阻塞当前线程了，然后调用select方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line">private void select(boolean oldWakenUp) throws IOException &#123;</span><br><span class="line">        Selector selector = this.selector;</span><br><span class="line">        try &#123;</span><br><span class="line">            int selectCnt = 0;</span><br><span class="line">            long currentTimeNanos = System.nanoTime();</span><br><span class="line">            long selectDeadLineNanos = currentTimeNanos + delayNanos(currentTimeNanos);</span><br><span class="line">            for (;;) &#123;</span><br><span class="line">                long timeoutMillis = (selectDeadLineNanos - currentTimeNanos + 500000L) / 1000000L;</span><br><span class="line">                if (timeoutMillis &lt;= 0) &#123;</span><br><span class="line">                    if (selectCnt == 0) &#123;</span><br><span class="line">                        selector.selectNow();</span><br><span class="line">                        selectCnt = 1;</span><br><span class="line">                    &#125;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">              </span><br><span class="line">                if (hasTasks() &amp;&amp; wakenUp.compareAndSet(false, true)) &#123;</span><br><span class="line">                    selector.selectNow();</span><br><span class="line">                    selectCnt = 1;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                int selectedKeys = selector.select(timeoutMillis);</span><br><span class="line">                selectCnt ++;</span><br><span class="line"></span><br><span class="line">                if (selectedKeys != 0 || oldWakenUp || wakenUp.get() || hasTasks() || hasScheduledTasks()) &#123;</span><br><span class="line">                    // - Selected something,</span><br><span class="line">                    // - waken up by user, or</span><br><span class="line">                    // - the task queue has a pending task.</span><br><span class="line">                    // - a scheduled task is ready for processing</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line">                if (Thread.interrupted()) &#123;</span><br><span class="line">                    if (logger.isDebugEnabled()) &#123;</span><br><span class="line">                        logger.debug(&quot;Selector.select() returned prematurely because &quot; +</span><br><span class="line">                                &quot;Thread.currentThread().interrupt() was called. Use &quot; +</span><br><span class="line">                                &quot;NioEventLoop.shutdownGracefully() to shutdown the NioEventLoop.&quot;);</span><br><span class="line">                    &#125;</span><br><span class="line">                    selectCnt = 1;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                long time = System.nanoTime();</span><br><span class="line">                if (time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis) &gt;= currentTimeNanos) &#123;</span><br><span class="line">                    // timeoutMillis elapsed without anything selected.</span><br><span class="line">                    selectCnt = 1;</span><br><span class="line">                &#125; else if (SELECTOR_AUTO_REBUILD_THRESHOLD &gt; 0 &amp;&amp;</span><br><span class="line">                        selectCnt &gt;= SELECTOR_AUTO_REBUILD_THRESHOLD) &#123;</span><br><span class="line">                    // The selector returned prematurely many times in a row.</span><br><span class="line">                    // Rebuild the selector to work around the problem.</span><br><span class="line">                    logger.warn(</span><br><span class="line">                            &quot;Selector.select() returned prematurely &#123;&#125; times in a row; rebuilding Selector &#123;&#125;.&quot;,</span><br><span class="line">                            selectCnt, selector);</span><br><span class="line"></span><br><span class="line">                    rebuildSelector();</span><br><span class="line">                    selector = this.selector;</span><br><span class="line"></span><br><span class="line">                    // Select again to populate selectedKeys.</span><br><span class="line">                    selector.selectNow();</span><br><span class="line">                    selectCnt = 1;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                currentTimeNanos = time;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            if (selectCnt &gt; MIN_PREMATURE_SELECTOR_RETURNS) &#123;</span><br><span class="line">                if (logger.isDebugEnabled()) &#123;</span><br><span class="line">                    logger.debug(&quot;Selector.select() returned prematurely &#123;&#125; times in a row for Selector &#123;&#125;.&quot;,</span><br><span class="line">                            selectCnt - 1, selector);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; catch (CancelledKeyException e) &#123;</span><br><span class="line">            if (logger.isDebugEnabled()) &#123;</span><br><span class="line">                logger.debug(CancelledKeyException.class.getSimpleName() + &quot; raised by a Selector &#123;&#125; - JDK bug?&quot;,</span><br><span class="line">                        selector, e);</span><br><span class="line">            &#125;</span><br><span class="line">            // Harmless exception - log anyway</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>select方法首先是计算什么时候结束阻塞，就是selectDeadLineNanos这个变量，那是怎么计算的呢，先拿到当前时间，然后再计算ScheduleTask下次到期时间，就算出了select需要阻塞多久再醒过来，这里设计的很巧妙，还是那句话，老子不仅是I/O线程，我还是个任务线程，谁都要照顾到。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"> long currentTimeNanos = System.nanoTime();</span><br><span class="line">            long selectDeadLineNanos = currentTimeNanos + delayNanos(currentTimeNanos);</span><br><span class="line">            </span><br><span class="line">protected long delayNanos(long currentTimeNanos) &#123;</span><br><span class="line">        ScheduledFutureTask&lt;?&gt; scheduledTask = peekScheduledTask();</span><br><span class="line">        if (scheduledTask == null) &#123;</span><br><span class="line">            return SCHEDULE_PURGE_INTERVAL;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return scheduledTask.delayNanos(currentTimeNanos);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>然后在这个selectDeadLineNanos时间内通过一个死循环阻塞开始尽情select。我们继续看下面的代码。for循环内每次设置500毫秒的select超时时间，接着判断selectDeadLineNanos的阻塞时间到了没，到了但是selectCnt计数还是0那么直接selectNow一把再退出，接着在调用select方法阻塞之前再次判断这时候有没有任务进队列有的话乖乖退出让出线程时间给任务执行。最后才是调用selector.select(timeoutMillis)方法，直到有事件触发或者超时线程才恢复，并且只要有事件触发或者wakeUp被设为true或者任务队列有任务了，直接退出死循环。在select方法里还有一个逻辑值得一提，也就是Netty解决JDK臭名昭著的epoll空轮询导致cpu 100%的bug。</p>
+<h3 id="epoll-BUG"><a href="#epoll-BUG" class="headerlink" title="epoll BUG"></a>epoll BUG</h3><p>java NIO在linux环境下通过selector.select在一般情况下如果没有事件准备好当前线程是被阻塞的，但是在某些情况下select之后就算没有事件触发也会返回，然后select获取到的selectorkey数量为0，然后在忙循环里面一直空轮询导致cpu 100%系统崩溃。在Netty中把这个bug修复了，修复逻辑很简单，使用一个计数器默认阈值为512次，如果出现512次空轮询，那么进行重建selector，新建一个selector，把老的selector上面注册的channel迁移到新的selector上，最后把老的selector覆盖，然后关闭老的selector的方式来修复空轮询bug，具体看下面代码，实现逻辑在rebuildSelector()方法里。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line">else if (SELECTOR_AUTO_REBUILD_THRESHOLD &gt; 0 &amp;&amp;</span><br><span class="line">                        selectCnt &gt;= SELECTOR_AUTO_REBUILD_THRESHOLD) &#123;</span><br><span class="line">                    // The selector returned prematurely many times in a row.</span><br><span class="line">                    // Rebuild the selector to work around the problem.</span><br><span class="line">                    logger.warn(</span><br><span class="line">                            &quot;Selector.select() returned prematurely &#123;&#125; times in a row; rebuilding Selector &#123;&#125;.&quot;,</span><br><span class="line">                            selectCnt, selector);</span><br><span class="line"></span><br><span class="line">                    rebuildSelector();</span><br><span class="line">                    selector = this.selector;</span><br><span class="line"></span><br><span class="line">                    // Select again to populate selectedKeys.</span><br><span class="line">                    selector.selectNow();</span><br><span class="line">                    selectCnt = 1;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">    private void rebuildSelector0() &#123;</span><br><span class="line">        final Selector oldSelector = selector;</span><br><span class="line">        final SelectorTuple newSelectorTuple;</span><br><span class="line"></span><br><span class="line">        if (oldSelector == null) &#123;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            newSelectorTuple = openSelector();</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">            logger.warn(&quot;Failed to create a new Selector.&quot;, e);</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Register all channels to the new Selector.</span><br><span class="line">        int nChannels = 0;</span><br><span class="line">        for (SelectionKey key: oldSelector.keys()) &#123;</span><br><span class="line">            Object a = key.attachment();</span><br><span class="line">            try &#123;</span><br><span class="line">                if (!key.isValid() || key.channel().keyFor(newSelectorTuple.unwrappedSelector) != null) &#123;</span><br><span class="line">                    continue;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                int interestOps = key.interestOps();</span><br><span class="line">                key.cancel();</span><br><span class="line">                SelectionKey newKey = key.channel().register(newSelectorTuple.unwrappedSelector, interestOps, a);</span><br><span class="line">                if (a instanceof AbstractNioChannel) &#123;</span><br><span class="line">                    // Update SelectionKey</span><br><span class="line">                    ((AbstractNioChannel) a).selectionKey = newKey;</span><br><span class="line">                &#125;</span><br><span class="line">                nChannels ++;</span><br><span class="line">            &#125; catch (Exception e) &#123;</span><br><span class="line">                logger.warn(&quot;Failed to re-register a Channel to the new Selector.&quot;, e);</span><br><span class="line">                if (a instanceof AbstractNioChannel) &#123;</span><br><span class="line">                    AbstractNioChannel ch = (AbstractNioChannel) a;</span><br><span class="line">                    ch.unsafe().close(ch.unsafe().voidPromise());</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">                    NioTask&lt;SelectableChannel&gt; task = (NioTask&lt;SelectableChannel&gt;) a;</span><br><span class="line">                    invokeChannelUnregistered(task, key, e);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        selector = newSelectorTuple.selector;</span><br><span class="line">        unwrappedSelector = newSelectorTuple.unwrappedSelector;</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            // time to close the old selector as everything else is registered to the new one</span><br><span class="line">            oldSelector.close();</span><br><span class="line">        &#125; catch (Throwable t) &#123;</span><br><span class="line">            if (logger.isWarnEnabled()) &#123;</span><br><span class="line">                logger.warn(&quot;Failed to close the old Selector.&quot;, t);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        logger.info(&quot;Migrated &quot; + nChannels + &quot; channel(s) to the new Selector.&quot;);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>看完select方法，我们回过头来看run方法里面剩余的部分。select结束之后按照我们JAVA NIO的经验是要对这些SelectedKeys进行处理的，比如读、写数据，对数据进行业务处理等等。我们看看Netty是怎么处理的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">final int ioRatio = this.ioRatio;</span><br><span class="line">               if (ioRatio == 100) &#123;</span><br><span class="line">                   try &#123;</span><br><span class="line">                       processSelectedKeys();</span><br><span class="line">                   &#125; finally &#123;</span><br><span class="line">                       // Ensure we always run tasks.</span><br><span class="line">                       runAllTasks();</span><br><span class="line">                   &#125;</span><br><span class="line">               &#125; else &#123;</span><br><span class="line">                   final long ioStartTime = System.nanoTime();</span><br><span class="line">                   try &#123;</span><br><span class="line">                       processSelectedKeys();</span><br><span class="line">                   &#125; finally &#123;</span><br><span class="line">                       // Ensure we always run tasks.</span><br><span class="line">                       final long ioTime = System.nanoTime() - ioStartTime;</span><br><span class="line">                       runAllTasks(ioTime * (100 - ioRatio) / ioRatio);</span><br><span class="line">                   &#125;</span><br><span class="line">               &#125;</span><br></pre></td></tr></table></figure>
+<p>特地把run方法剩余部分截出来，上面贴的代码太长怕忘了。可以看到在NioEventLoop里定义了个ioRatio的变量，默认是50，这个ioRatio就是之前我们说到的“EventLoop既是I/O线程处理I/O事件，又是任务线程处理任务队列里的任务”。这里首先判断ioRatio是否100，如果io执行百分比是100%，那么直接就处理processSelectedKeys()方法，只有等到有I/O事件处理完成再处理任务队列里的任务，如果不是100%那么也是先处理I/O事件，接着再计算处理任务队列里的任务可以占用线程的时间。计算公式如下,很好推导</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ioTime / ioRatio = taskTime / taskRatio</span><br><span class="line">taskRatio=100-ioRatio</span><br><span class="line">taskTime=ioTime * (100 - ioRatio) / ioRatio</span><br></pre></td></tr></table></figure>
+<p>也就是说如果是50的ioRatio，那么处理I/O事件所占用线程时间和处理队列任务各占一半。处理任务队列的任务在这就不展开了，代码不难有兴趣的可以自行阅读源码，我们重点看看processSelectedKeys()方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">private void processSelectedKeysOptimized() &#123;</span><br><span class="line">        for (int i = 0; i &lt; selectedKeys.size; ++i) &#123;</span><br><span class="line">            final SelectionKey k = selectedKeys.keys[i];</span><br><span class="line">            // null out entry in the array to allow to have it GC&apos;ed once the Channel close</span><br><span class="line">            // See https://github.com/netty/netty/issues/2363</span><br><span class="line">            selectedKeys.keys[i] = null;</span><br><span class="line"></span><br><span class="line">            final Object a = k.attachment();</span><br><span class="line"></span><br><span class="line">            if (a instanceof AbstractNioChannel) &#123;</span><br><span class="line">                processSelectedKey(k, (AbstractNioChannel) a);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">                NioTask&lt;SelectableChannel&gt; task = (NioTask&lt;SelectableChannel&gt;) a;</span><br><span class="line">                processSelectedKey(k, task);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            if (needsToSelectAgain) &#123;</span><br><span class="line">                // null out entries in the array to allow to have it GC&apos;ed once the Channel close</span><br><span class="line">                // See https://github.com/netty/netty/issues/2363</span><br><span class="line">                selectedKeys.reset(i + 1);</span><br><span class="line"></span><br><span class="line">                selectAgain();</span><br><span class="line">                i = -1;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>processSelectedKeysOptimized()方法拿到select出来的selectedKeys，首先把SelectedKey取出来然后remove掉，在Netty这变成了置空，取出来的key通过Key.attachment方法拿到当初设置进去的AbstractNioChannel。还记得么，我们在注册Channel到Selector上的时候在unsafe里把this设到attachment里去了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">   protected void doRegister() throws Exception &#123;</span><br><span class="line">       boolean selected = false;</span><br><span class="line">       for (;;) &#123;</span><br><span class="line">           try &#123;</span><br><span class="line">               selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);</span><br><span class="line">               return;</span><br><span class="line">           &#125; catch (CancelledKeyException e) &#123;</span><br><span class="line">               //删除无关代码</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>所以这个attachment拿到的object当然是AbstractNioChannel，然后就来到了processSelectedKey(k, (AbstractNioChannel) a)方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) &#123;</span><br><span class="line">        final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();</span><br><span class="line">        if (!k.isValid()) &#123;</span><br><span class="line">        //省略无关代码</span><br><span class="line">        try &#123;</span><br><span class="line">            int readyOps = k.readyOps();</span><br><span class="line">            // We first need to call finishConnect() before try to trigger a read(...) or write(...) as otherwise</span><br><span class="line">            // the NIO JDK channel implementation may throw a NotYetConnectedException.</span><br><span class="line">            if ((readyOps &amp; SelectionKey.OP_CONNECT) != 0) &#123;</span><br><span class="line">                int ops = k.interestOps();</span><br><span class="line">                ops &amp;= ~SelectionKey.OP_CONNECT;</span><br><span class="line">                k.interestOps(ops);</span><br><span class="line"></span><br><span class="line">                unsafe.finishConnect();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            // Process OP_WRITE first as we may be able to write some queued buffers and so free memory.</span><br><span class="line">            if ((readyOps &amp; SelectionKey.OP_WRITE) != 0) &#123;</span><br><span class="line">                // Call forceFlush which will also take care of clear the OP_WRITE once there is nothing left to write</span><br><span class="line">                ch.unsafe().forceFlush();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            if ((readyOps &amp; (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) &#123;</span><br><span class="line">                unsafe.read();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; catch (CancelledKeyException ignored) &#123;</span><br><span class="line">            unsafe.close(unsafe.voidPromise());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到这块代码就是在真正处理I/O事件了，如果readyOps是<code>OP_CONNECT</code>那么先把<code>OP_CONNECT</code>操作位从SelectedKeys的interestOps()给移除，否则每次select都能拿到这个老的事件，然后通过unsafe.finishConnect()方法把事件传播下去channel是Active的了。如果readyOps是<code>OP_WRITE</code>那么直接forceFlush()，把Netty的OutboundBuffer转换成ByteBuffer调用JDK原生方法把数据写如内核缓存区最终传输出去。<br>如果readyOps是<code>OP_READ或者OP_ACCEPT</code>那么调用unsafe.read()方法，unsafe.read()方法如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">public void read() &#123;</span><br><span class="line">            assert eventLoop().inEventLoop();</span><br><span class="line">            final ChannelConfig config = config();</span><br><span class="line">            final ChannelPipeline pipeline = pipeline();</span><br><span class="line">            final RecvByteBufAllocator.Handle allocHandle = unsafe().recvBufAllocHandle();</span><br><span class="line">            allocHandle.reset(config);</span><br><span class="line"></span><br><span class="line">            boolean closed = false;</span><br><span class="line">            Throwable exception = null;</span><br><span class="line">            try &#123;</span><br><span class="line">                try &#123;</span><br><span class="line">                    do &#123;</span><br><span class="line">                        int localRead = doReadMessages(readBuf);</span><br><span class="line">                        if (localRead == 0) &#123;</span><br><span class="line">                            break;</span><br><span class="line">                        &#125;</span><br><span class="line">                        if (localRead &lt; 0) &#123;</span><br><span class="line">                            closed = true;</span><br><span class="line">                            break;</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        allocHandle.incMessagesRead(localRead);</span><br><span class="line">                    &#125; while (allocHandle.continueReading());</span><br><span class="line">                &#125; catch (Throwable t) &#123;</span><br><span class="line">                    exception = t;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                int size = readBuf.size();</span><br><span class="line">                for (int i = 0; i &lt; size; i ++) &#123;</span><br><span class="line">                    readPending = false;</span><br><span class="line">                    pipeline.fireChannelRead(readBuf.get(i));</span><br><span class="line">                &#125;</span><br><span class="line">                readBuf.clear();</span><br><span class="line">                allocHandle.readComplete();</span><br><span class="line">                pipeline.fireChannelReadComplete();</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line">            &#125; </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>该方法主要做了三件事：1.分配空间；2.accept 操作拿到channel；3.调用pipeline.fireChannelRead方法把channelRead事件传递下去以便进行业务处理。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>我们分析完了EventLoop的逻辑，总的来说EventLoopGroup在Netty中是线程池的角色，EventLoopGroup中的每个线程持有类NioEventLoop是I/O线程可以处理I/O事件，在NioEventLoop内部通过死循环+select操作完成事件循环，同时也是任务线程可以处理任务队列里的任务，并且任务队列里的任务也可以是定时任务。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JAVA-Netty-NIO/" rel="tag"># JAVA,Netty,NIO</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/15/Netty4.x源码分析之EventLoop（一）/" rel="next" title="Netty4.x源码分析之EventLoop（一）">
+                <i class="fa fa-chevron-left"></i> Netty4.x源码分析之EventLoop（一）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="赖峣" />
+            
+              <p class="site-author-name" itemprop="name">赖峣</p>
+              <p class="site-description motion-element" itemprop="description">聊技术，讲生活，发现技术生活的美好</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="http://blog.csdn.net/nethackatschool" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-CSDN"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#引言"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NioEventLoop事件循环"><span class="nav-number">2.</span> <span class="nav-text">NioEventLoop事件循环</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#epoll-BUG"><span class="nav-number">3.</span> <span class="nav-text">epoll BUG</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">赖峣</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">41.0k</span>
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+<div>
+<span id="busuanzi_container_site_pv">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+</span>
+
+<span id="busuanzi_container_site_uv" style="margin-right:1%">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+<!-- custom analytics part create by xiamo -->
+<script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+<script>AV.initialize("SLERFol0ItknNYCveOdbh9VW-gzGzoHsz", "46swuV0BBuclEmnmFDFS4kdT");</script>
+<script>
+function showTime(Counter) {
+  var query = new AV.Query(Counter);
+  $(".leancloud_visitors").each(function() {
+    var url = $(this).attr("id").trim();
+    query.equalTo("url", url);
+    query.find({
+      success: function(results) {
+        if (results.length == 0) {
+          var content = '0 ' + $(document.getElementById(url)).text();
+          $(document.getElementById(url)).text(content);
+          return;
+        }
+        for (var i = 0; i < results.length; i++) {
+          var object = results[i];
+          var content = object.get('time') + ' ' + $(document.getElementById(url)).text();
+          $(document.getElementById(url)).text(content);
+        }
+      },
+      error: function(object, error) {
+        console.log("Error: " + error.code + " " + error.message);
+      }
+    });
+
+  });
+}
+
+function addCount(Counter) {
+  var Counter = AV.Object.extend("Counter");
+  url = $(".leancloud_visitors").attr('id').trim();
+  title = $(".leancloud_visitors").attr('data-flag-title').trim();
+  var query = new AV.Query(Counter);
+  query.equalTo("url", url);
+  query.find({
+    success: function(results) {
+      if (results.length > 0) {
+        var counter = results[0];
+        counter.fetchWhenSave(true);
+        counter.increment("time");
+        counter.save(null, {
+          success: function(counter) {
+            var content =  counter.get('time') + ' ' + $(document.getElementById(url)).text();
+            $(document.getElementById(url)).text(content);
+          },
+          error: function(counter, error) {
+            console.log('Failed to save Visitor num, with error message: ' + error.message);
+          }
+        });
+      } else {
+        var newcounter = new Counter();
+        newcounter.set("title", title);
+        newcounter.set("url", url);
+        newcounter.set("time", 1);
+        newcounter.save(null, {
+          success: function(newcounter) {
+              console.log("newcounter.get('time')="+newcounter.get('time'));
+            var content = newcounter.get('time') + ' ' + $(document.getElementById(url)).text();
+            $(document.getElementById(url)).text(content);
+          },
+          error: function(newcounter, error) {
+            console.log('Failed to create');
+          }
+        });
+      }
+    },
+    error: function(error) {
+      console.log('Error:' + error.code + " " + error.message);
+    }
+  });
+}
+$(function() {
+  var Counter = AV.Object.extend("Counter");
+  if ($('.leancloud_visitors').length == 1) {
+    addCount(Counter);
+  } else if ($('.post-title-link').length > 1) {
+    showTime(Counter);
+  }
+}); 
+</script>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("SLERFol0ItknNYCveOdbh9VW-gzGzoHsz", "46swuV0BBuclEmnmFDFS4kdT");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -87,7 +87,7 @@
 <meta property="og:site_name" content="知之’s Blog">
 <meta property="og:description" content="引言最近公司一项目写完在进行压测，在压测过程中偶然top了几次，发现项目运行的进程占用的资源RES一直在缓慢增长。于是怀疑是存在内存泄漏。 用通俗的话来讲内存泄漏是由于开发人员没有注意到内存管理，没有有效的进行内存回收导致的一部分内存无法被回收，同时在系统运行过程中会不断有新的相关内存占用，最终导致Out of Memory。这种情况在C++ programmer中是非常头疼的一件事，因为C++把">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-04-29T13:59:44.938Z">
+<meta property="og:updated_time" content="2019-08-09T13:50:34.024Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="记一次内存泄漏排查">
 <meta name="twitter:description" content="引言最近公司一项目写完在进行压测，在压测过程中偶然top了几次，发现项目运行的进程占用的资源RES一直在缓慢增长。于是怀疑是存在内存泄漏。 用通俗的话来讲内存泄漏是由于开发人员没有注意到内存管理，没有有效的进行内存回收导致的一部分内存无法被回收，同时在系统运行过程中会不断有新的相关内存占用，最终导致Out of Memory。这种情况在C++ programmer中是非常头疼的一件事，因为C++把">
@@ -396,7 +396,7 @@
    5:          6858         219456  java.util.concurrent.ConcurrentHashMap$Node
    6:          8716         209184  java.lang.String
    7:          6438         103008  java.lang.Object
-</code></pre><p>发现排名第一多对象数量和占用内存最多的竟然是一个Long对象，这绝对有问题，一般没有内存泄漏的系统jmap出来的前五一般都是byte、char、string这些对象，知道这个Long有问题，本人又去代码中瞧了一眼，用了Long的地方都是正常的，有remove释放操作，为了进一步弄清到底是哪个地方出问题，我祭出了终极大法–Memory Analyzer。使用<strong>jmap -dump:format=b,file=文件名 [pid]</strong> 命令dump出来内存映像文件，然后扔进Memory Analyzer，进入histoGram，选择Long这个对象，右键选择with income object。可以找到引用链，最终发现是一个别的同事写的私用协议有个全局字段add到队列中但是没有remove，所以导致内存泄漏。</p>
+</code></pre><p>发现排名第一多对象数量和占用内存最多的竟然是一个Long对象，这绝对有问题，一般没有内存泄漏的系统jmap出来的前五一般都是byte、char、string这些对象，知道这个Long有问题，本人又去代码中瞧了一眼，用了Long的地方都是正常的，有remove释放操作，为了进一步弄清到底是哪个地方出问题，我祭出了终极大法–Memory Analyzer。使用<strong>jmap -dump:format=b,file=文件名 [pid]</strong>  命令dump出来内存映像文件，然后扔进Memory Analyzer，进入histoGram，选择Long这个对象，右键选择with income object。可以找到引用链，最终发现是一个别的同事写的私用协议有个全局字段add到队列中但是没有remove，所以导致内存泄漏。</p>
 <p>对了，最后说一嘴之前我不是使用top看内存涨了么，其实使用top看是看不出什么的，因为就算没有内存泄漏，特么RES也是会涨的，因为JVM向操作系统要内存了之后，如果当前内存够，JVM是不会立马释放内存的，JVM还会占用这块内存当做缓存，防止数据高峰时又需要向操作系统要内存（因为系统调用是要时间和性能做代价的）。</p>
 
       
@@ -438,8 +438,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2018/07/21/java HTTP多线程断点续传下载/" rel="prev" title="java HTTP多线程断点续传下载">
-                java HTTP多线程断点续传下载 <i class="fa fa-chevron-right"></i>
+              <a href="/2018/04/29/java基础之synchronized关键字/" rel="prev" title="java基础之synchronized关键字">
+                java基础之synchronized关键字 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -521,7 +521,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-count">25</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -534,7 +534,7 @@
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-count">19</span>
                   <span class="site-state-item-name">标签</span>
                 
               </div>
@@ -599,7 +599,7 @@
       <div class="footer-inner">
         
 <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-<div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+<div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
@@ -613,7 +613,7 @@
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">22.4k</span>
+    <span title="Site words total count">41.0k</span>
   
 </div>
 

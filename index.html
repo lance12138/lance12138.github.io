@@ -266,7 +266,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/20/thread interrupt机制/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/10/Netty4.x源码分析之EventLoop（二）/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="赖峣">
@@ -285,7 +285,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/11/20/thread interrupt机制/" itemprop="url">thread interrupt机制</a></h1>
+                <a class="post-title-link" href="/2019/09/10/Netty4.x源码分析之EventLoop（二）/" itemprop="url">Netty4.x源码分析之EventLoop（二）</a></h1>
         
 
         <div class="post-meta">
@@ -297,8 +297,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-20T18:52:01+08:00">
-                2018-11-20
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-09-10T20:15:32+08:00">
+                2019-09-10
               </time>
             
 
@@ -315,7 +315,7 @@
 
           
           
-             <span id="/2018/11/20/thread interrupt机制/" class="leancloud_visitors" data-flag-title="thread interrupt机制">
+             <span id="/2019/09/10/Netty4.x源码分析之EventLoop（二）/" class="leancloud_visitors" data-flag-title="Netty4.x源码分析之EventLoop（二）">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -340,7 +340,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1,453
+                  3,372
                 </span>
               
 
@@ -356,7 +356,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  7
+                  16
                 </span>
               
             </div>
@@ -378,583 +378,10 @@
 
       
         
-          
-            <p>最近在工作中碰到同事使用interrupt，刚好本人并没怎么用过这个interrupt机制，只知道这个方法是用来中断线程的，对于阻塞的线程，我们可以调用interrupt方法中断线程，并且还听说这个方法并不靠谱，今天对interrupt机制做个总结。</p>
-<p>对于java语言来说，不会用一个api，最简单粗暴的方式就是去看看JDK源码，看看道格李大神的解释。在interrupt方法中第一句注释就是</p>
-<blockquote>
-<p>Interrupts this thread.</p>
-</blockquote>
-<p>根据这个解释似乎这个interrupt就是给开发人员用来中断线程的。但是本人做了个小测试。测试代码如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">package rest;</span><br><span class="line"></span><br><span class="line">public class TestThread implements Runnable &#123;</span><br><span class="line"></span><br><span class="line">    private int count;</span><br><span class="line">    public TestThread(int count) &#123;</span><br><span class="line">        this.count=count;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void run() &#123;</span><br><span class="line">        for (int i=0;i&lt;count;i++)&#123;</span><br><span class="line">            System.out.println(&quot;current count is: &quot;+i);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        System.out.println(&quot;the thread: &quot;+Thread.currentThread().getName()+&quot; is end&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">package rest;</span><br><span class="line"></span><br><span class="line">public class TestInterrupt &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public static void main(String[] args)throws Exception&#123; </span><br><span class="line">        </span><br><span class="line">        TestThread testThread = new TestThread(10000);</span><br><span class="line">        Thread thread = new Thread(testThread);</span><br><span class="line">        thread.start();</span><br><span class="line">        Thread.sleep(10);</span><br><span class="line">        thread.interrupt();</span><br><span class="line">        System.out.println(&quot;1:::::&quot;+thread.isInterrupted());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这段代码很简单，就是创建个线程进行counter，启动线程之后让主线程sleep 10毫秒，再调用interrupt方法企图停止线程。但是结果大概各位都猜到了，testThread仿佛啥都没有发生直接运行到结束，并没有按照我们的想法中断。到底是什么情况，无法中止线程为啥还要提供这个方法出来呢？让我们带着问题去看看JDK源码。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line">     * Interrupts this thread.</span><br><span class="line">     *</span><br><span class="line">     * &lt;p&gt; Unless the current thread is interrupting itself, which is</span><br><span class="line">     * always permitted, the &#123;@link #checkAccess() checkAccess&#125; method</span><br><span class="line">     * of this thread is invoked, which may cause a &#123;@link</span><br><span class="line">     * SecurityException&#125; to be thrown.</span><br><span class="line">     *</span><br><span class="line">     * &lt;p&gt; If this thread is blocked in an invocation of the &#123;@link</span><br><span class="line">     * Object#wait() wait()&#125;, &#123;@link Object#wait(long) wait(long)&#125;, or &#123;@link</span><br><span class="line">     * Object#wait(long, int) wait(long, int)&#125; methods of the &#123;@link Object&#125;</span><br><span class="line">     * class, or of the &#123;@link #join()&#125;, &#123;@link #join(long)&#125;, &#123;@link</span><br><span class="line">     * #join(long, int)&#125;, &#123;@link #sleep(long)&#125;, or &#123;@link #sleep(long, int)&#125;,</span><br><span class="line">     * methods of this class, then its interrupt status will be cleared and it</span><br><span class="line">     * will receive an &#123;@link InterruptedException&#125;.</span><br><span class="line">     *</span><br><span class="line">     * &lt;p&gt; If this thread is blocked in an I/O operation upon an &#123;@link</span><br><span class="line">     * java.nio.channels.InterruptibleChannel InterruptibleChannel&#125;</span><br><span class="line">     * then the channel will be closed, the thread&apos;s interrupt</span><br><span class="line">     * status will be set, and the thread will receive a &#123;@link</span><br><span class="line">     * java.nio.channels.ClosedByInterruptException&#125;.</span><br><span class="line">     *</span><br><span class="line">     * &lt;p&gt; If this thread is blocked in a &#123;@link java.nio.channels.Selector&#125;</span><br><span class="line">     * then the thread&apos;s interrupt status will be set and it will return</span><br><span class="line">     * immediately from the selection operation, possibly with a non-zero</span><br><span class="line">     * value, just as if the selector&apos;s &#123;@link</span><br><span class="line">     * java.nio.channels.Selector#wakeup wakeup&#125; method were invoked.</span><br><span class="line">     *</span><br><span class="line">     * &lt;p&gt; If none of the previous conditions hold then this thread&apos;s interrupt</span><br><span class="line">     * status will be set. &lt;/p&gt;</span><br><span class="line">     *</span><br><span class="line">     * &lt;p&gt; Interrupting a thread that is not alive need not have any effect.</span><br><span class="line">     *</span><br><span class="line">     * @throws  SecurityException</span><br><span class="line">     *          if the current thread cannot modify this thread</span><br><span class="line">     *</span><br><span class="line">     * @revised 6.0</span><br><span class="line">     * @spec JSR-51</span><br><span class="line">     */</span><br><span class="line">    public void interrupt() &#123;</span><br><span class="line">        if (this != Thread.currentThread())</span><br><span class="line">            checkAccess();</span><br><span class="line"></span><br><span class="line">        synchronized (blockerLock) &#123;</span><br><span class="line">            Interruptible b = blocker;</span><br><span class="line">            if (b != null) &#123;</span><br><span class="line">                interrupt0();           // Just to set the interrupt flag</span><br><span class="line">                b.interrupt(this);</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        interrupt0();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>这个interrupt方法很简单，就只有十几行代码，初看这个代码还是有几点不明白的，第一：Interruptible是什么鬼，有什么作用？第二：interrupt0()方法又是什么作用？第二点很好回答，因为代码后面注释就说了</p>
-<blockquote>
-<p>Just to set the interrupt flag </p>
-</blockquote>
-<p>interrupt0方法就是设置中断标志位。<br>再看看interrupt()上面的注释后我们应该可以解答。注释大概意思是如果当前线程调用了sleep()/wait()/join()方法，中断状态标志会被清除，并且线程会接收一个中断异常。翻译成中文就是说当前线程阻塞了，如果你调用了interrupt方法，这个线程就会被中断，并且抛出中断异常。<br>结合Interruptible的注释</p>
-<blockquote>
-<p>The object in which this thread is blocked in an interruptible I/O operation, if any.  The blocker’s interrupt method should be invoked after setting this thread’s interrupt status.</p>
-</blockquote>
-<p>意思是说在可中断的I/O操作（如果有的话）中阻止该线程的对象。在设置线程中断状态后，应调用拦截器的中断方法。<br>这么来看sleep()/wait()/join()就是所说的可中断的操作，所以调用了sleep()/wait()/join()方法后Interruptible会被赋值，<strong>Interruptible b = blocker</strong>中的b是不为空的，并且会先行设置当前线程的中断标志位，所以会执行if语句中的代码调用interrupt0方法来清除中断状态标志位<br>然后调用Interruptible的interrupt方法真正的中断当前线程。<strong>也就是说非注释上说的这些阻塞方法调用或者可中断I/O调用，你使用thread对象的interrupt()方法是不能中断线程的，</strong>interrupt0()这个方法只是设置中断标志而已，并没有什么*用。那么有人要问了，那正常运行的线程我想中断停止它怎么办？很正常的需求啊，很多业务都很可能要这个需求，比如我用多个线程去抢一张火车票，有一个线程抢到了我就可以直接终止其他线程。我会建议你使用自定义的一个标志位，这个标志位用volatile修饰让标志具有可见性。简单的例子如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">public class TestThread implements Runnable &#123;</span><br><span class="line"></span><br><span class="line">    private int count;</span><br><span class="line">    private volatile boolean stop=false;</span><br><span class="line"></span><br><span class="line">    public TestThread(int count) &#123;</span><br><span class="line">        this.count=count;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void shutdownNow()&#123;</span><br><span class="line">        this.stop=true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void run() &#123;</span><br><span class="line">        for (int i=0;i&lt;count;i++)&#123;</span><br><span class="line">            System.out.println(&quot;current count is: &quot;+i);</span><br><span class="line">            if(stop) &#123;</span><br><span class="line">                System.out.println(&quot;aaaa i&apos;m be stoped!!!&quot;);</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        System.out.println(&quot;the thread: &quot;+Thread.currentThread().getName()+&quot; is end&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">public class TestInterrupt &#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public static void main(String[] args)throws Exception&#123;</span><br><span class="line">        TestThread testThread = new TestThread(10000);</span><br><span class="line">    Thread thread = new Thread(testThread);</span><br><span class="line">    thread.start();</span><br><span class="line">    Thread.sleep(10);</span><br><span class="line">    testThread.shutdownNow();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/07/21/java HTTP多线程断点续传下载/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="赖峣">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="知之’s Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/07/21/java HTTP多线程断点续传下载/" itemprop="url">java HTTP多线程断点续传下载</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-21T11:01:49+08:00">
-                2018-07-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-             <span id="/2018/07/21/java HTTP多线程断点续传下载/" class="leancloud_visitors" data-flag-title="java HTTP多线程断点续传下载">
-               <span class="post-meta-divider">|</span>
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               
-                 <span class="post-meta-item-text">阅读次数&#58;</span>
-               
-                 <span class="leancloud-visitors-count"></span>
-             </span>
-          
-
-          
-
-          
-            <div class="post-wordcount">
-              
-                
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-file-word-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">字数统计&#58;</span>
-                
-                <span title="字数统计">
-                  1,260
-                </span>
-              
-
-              
-                <span class="post-meta-divider">|</span>
-              
-
-              
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-clock-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
-                
-                <span title="阅读时长">
-                  6
-                </span>
-              
-            </div>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>HTTP协议可以说是当前最最重要的通信协议之一，HTTP协议作为应用层协议作用在TCP协议之上，是现在最广泛、最通用的通信协议。正因为如此，今天来说一说HTTP的<strong>断点续传</strong>功能。</p>
-<p><strong>断点续传</strong>：顾名思义就是说在数据传输时因网络原因出现下载中断，在这个时候可以在中断的地方继续下载而不需要重新下载。HTTP的断点续传原理比较简单，在HTTP1.1(RFC2616)中定义了断点续传相关的HTTP头<strong>Range</strong>和<strong>Content-Range</strong>字段。在请求某资源时，HTTP头加上Range头，如果服务器支持断点续传功能，那么你可以获取一个带有Content-Range的响应头的响应。</p>
-<p>断点续传：顾名思义就是说在数据传输时因网络原因出现下载中断，在这个时候可以在中断的地方继续下载而不需要重新下载。HTTP的断点续传原理比较简单，在HTTP1.1(RFC2616)中定义了断点续传相关的HTTP头Range和Content-Range字段。在请求某资源时，HTTP头加上Range头，如果服务器支持断点续传功能，那么你可以获取一个带有Content-Range的响应头的响应。</p>
-<p>一个HTTP断点续传基本步骤如下：</p>
-<ol>
-<li>客户端请求某资源，HTTP头加上Range头，如： Range:bytes=1024-2048； </li>
-<li>请求成功，服务器返回带COntent-Range响应头的响应，如：Content-Range:bytes 1024-2048/512000；</li>
-<li>此时网络中断，客户端已经记录了当前下载的进度。</li>
-<li>客户端继续请求资源，此时Range头将从2048开始。</li>
-<li>资源下载成功。<br>接下来看代码：</li>
-</ol>
-<pre><code>public class MultiDownloadProcessor {
-
-private String url;
-private String targetPath;
-private int threadCount;
-private long contentLength;
-private static final String FILE_WRITE_READ = &quot;rw&quot;;
-private static final String FILE_WRITE_READ_MODIFY = &quot;rwd&quot;;
-private static final String SUFFIX_TEMP = &quot;.tmp&quot;;
-private static final String RANGE_HEAD = &quot;Range&quot;;
-private static final int SNIFF_BYTES = 1024;
-private static final int BUFFER = 1024 * 1024;
-private static final String CONTENT_RANGE = &quot;Content-Range&quot;;
-private static final String CONTENT_RANGE_DASH = &quot;/&quot;;
-private static final int TEMP_FILE_SKIP = 8;
-
-public MultiDownloadProcessor(String url, String targetPath, int threadCount) {
-this.url = url;
-this.targetPath = targetPath;
-this.threadCount = threadCount;
-}
-
-public void download() throws Exception {
-long startTime = System.currentTimeMillis();
-boolean isRange = sniffDownload();
-System.out.println(&quot;contentLength:&quot; + this.contentLength);
-File file = new File(targetPath, getFileName(url));
-//提前初始化好要下载文件
-initFile(file);
-if (isRange) {
-//分片下载
-partialDownload(file);
-System.out.println(&quot;down!!!!!!,use time：&quot; + (System.currentTimeMillis() - startTime));
-}else {
-//......简单单线程下载
-}
-}
-
-private void partialDownload(File file) throws Exception {
-File tempFile = new File(targetPath, fetchFileName(url) + SUFFIX_TEMP);
-List&lt;FutureTask&lt;Boolean&gt;&gt; list = new ArrayList&lt;&gt;();
-if(contentLength&lt;=0) {
-throw new Exception(&quot;contentLength is illegal&quot;);
-}
-
-//分块下载，建议设一个阈值，大于这个值才多线程下载
-long blockSize = contentLength / threadCount;
-for (int threadId = 0; threadId &lt; threadCount; threadId++) {
-long startIndex = threadId * blockSize;
-long endIndex = (threadId + 1) * blockSize;
-if (threadId == (threadCount - 1)) {
-endIndex = contentLength - 1;
-}
-
-DownloadHandler downloadHandler = new DownloadHandler(threadId, startIndex, endIndex, file);
-FutureTask&lt;Boolean&gt; result = new FutureTask&lt;&gt;(downloadHandler);
-Thread thread = new Thread(result);
-thread.start();
-list.add(result);
-}
-
-for (FutureTask&lt;Boolean&gt; futureTask : list) {
-futureTask.get();
-}
-
-cleanTemp(tempFile);
-}
-
-private void initFile(File file) throws Exception {
-//做得更好可以进来就创建一个下载系统自己的下载文件名，当下载完成就把名字改为目标名，chrome就是这么做的
-RandomAccessFile randomAccessFile = null;
-if (!file.exists()) {
-randomAccessFile = new RandomAccessFile(file, FILE_WRITE_READ_MODIFY);
-randomAccessFile.setLength(contentLength);
-randomAccessFile.close();
-}
-}
-
-//嗅探下载，判断是否可分片下载
-private boolean sniffDownload() throws Exception {
-Set&lt;Header&gt; set = new HashSet&lt;&gt;();
-Header header = new BasicHeader(RANGE_HEAD, &quot;bytes=&quot; + 0 + &quot;-&quot; + SNIFF_BYTES);
-set.add(header);
-CloseableHttpResponse response = HttpUtils.doHttpGetResponse(url, set);
-int code = response.getStatusLine().getStatusCode();
-long currentLength = response.getEntity().getContentLength();
-response.close();
-if (code == HttpStatus.SC_PARTIAL_CONTENT) {
-String contentRange = getContentRange(response.getAllHeaders());
-if (!StringUtils.isEmpty(contentRange)) {
-this.contentLength = Long.valueOf(contentRange);
-return true;
-}
-
-return false;
-} else if (code &gt;= HttpStatus.SC_BAD_REQUEST) {
-throw new Exception(&quot;request download url failed,statusCode: &quot; + code);
-} else {
-this.contentLength = currentLength;
-return false;
-}
-}
-
-private String getContentRange(Header[] headers) {
-if (headers != null &amp;&amp; headers.length &gt; 0) {
-for (Header header : headers) {
-if (CONTENT_RANGE.equals(header.getName())) {
-String value = header.getValue();
-return value.substring(value.lastIndexOf(CONTENT_RANGE_DASH) + 1);
-}
-}
-}
-
-return null;
-}
-
-private String getFileName(String url) {
-
-if (!url.contains(&quot;.&quot;)) {
-return null;
-}
-
-if (url.contains(&quot;?&quot;)) {
-return url.substring(url.lastIndexOf(&quot;/&quot;) + 1, url.lastIndexOf(&quot;?&quot;));
-}
-
-return url.substring(url.lastIndexOf(&quot;/&quot;) + 1);
-}
-
-private String fetchFileName(String url) {
-return url.substring(url.lastIndexOf(&quot;/&quot;), url.lastIndexOf(&quot;.&quot;));
-}
-
-private class DownloadHandler implements Callable&lt;Boolean&gt; {
-
-private int threadId;
-private long startIndex;
-private long endIndex;
-private File file;
-
-
-public DownloadHandler(int threadId, long startIndex, long endIndex, File file) {
-this.threadId = threadId;
-this.startIndex = startIndex;
-this.endIndex = endIndex;
-this.file = file;
-
-}
-
-
-private void readTemp(File tempFile, int threadId) throws Exception {
-if (tempFile.exists()) {
-RandomAccessFile randomAccessFile = new RandomAccessFile(tempFile, &quot;r&quot;);
-long skip = threadId &lt;&lt; TEMP_FILE_SKIP;
-randomAccessFile.seek(skip);
-if (randomAccessFile.length() &lt; skip) return;
-long l = randomAccessFile.readLong();
-this.startIndex = l;
-randomAccessFile.close();
-}
-
-}
-
-private void writeTemp(File tempFile,int threadId,int downloadTotal) throws Exception {
-RandomAccessFile temp = new RandomAccessFile(tempFile, FILE_WRITE_READ_MODIFY);
-temp.seek(threadId &lt;&lt; TEMP_FILE_SKIP);
-temp.writeLong(this.startIndex + downloadTotal);
-temp.close();
-}
-
-private CloseableHttpResponse partialHttpRequest(String url, long startIndex, long endIndex) throws Exception {
-Set&lt;Header&gt; set = new HashSet&lt;&gt;();
-Header header = new BasicHeader(RANGE_HEAD, &quot;bytes=&quot; + startIndex + &quot;-&quot; + endIndex);
-set.add(header);
-CloseableHttpResponse response = HttpUtils.doHttpGetResponse(url, set);
-return response;
-}
-
-//使用callable而不是runnable方便捕获异常
-@Override
-public Boolean call() throws Exception {
-System.out.println(&quot;threadId:&quot; + threadId + &quot;start download&quot; + System.currentTimeMillis());
-CloseableHttpResponse response = null;
-RandomAccessFile targetFile = null;
-InputStream content = null;
-try {
-File tempFile = new File(targetPath, fetchFileName(url) + SUFFIX_TEMP);
-readTemp(tempFile, threadId);
-System.out.println(&quot;threadId:&quot; + threadId + &quot; startIndex:&quot; + startIndex + &quot; endIndex:&quot; + endIndex);
-response = partialHttpRequest(url, startIndex, endIndex);
-content = response.getEntity().getContent();
-targetFile = new RandomAccessFile(file, FILE_WRITE_READ_MODIFY);
-targetFile.seek(startIndex);
-byte[] buffer = new byte[BUFFER];
-int len = 0;
-int total = 0;//记录本次文件下载大小
-while ((len = content.read(buffer)) &gt; 0) {
-total += len;
-targetFile.write(buffer, 0, len);
-//记录当前线程下载进度
-writeTemp(tempFile,threadId,total);
-}
-
-System.out.println(System.currentTimeMillis() + &quot;threadId:&quot; + threadId + &quot;download finished! this time get total :&quot; + total + &quot; byte data&quot;);
-} finally {
-if (content != null) content.close();
-if (response != null) response.close();
-if (targetFile != null) targetFile.close();
-}
-
-return true;
-}
-}
-
-//删除线程产生的临时文件
-private synchronized void cleanTemp(File file) {
-if (file.exists()) {
-file.delete();
-}
-}
-}
-</code></pre>
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/29/记一次内存泄漏排查/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="赖峣">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="知之’s Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/04/29/记一次内存泄漏排查/" itemprop="url">记一次内存泄漏排查</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-29T21:52:42+08:00">
-                2018-04-29
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-             <span id="/2018/04/29/记一次内存泄漏排查/" class="leancloud_visitors" data-flag-title="记一次内存泄漏排查">
-               <span class="post-meta-divider">|</span>
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               
-                 <span class="post-meta-item-text">阅读次数&#58;</span>
-               
-                 <span class="leancloud-visitors-count"></span>
-             </span>
-          
-
-          
-
-          
-            <div class="post-wordcount">
-              
-                
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-file-word-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">字数统计&#58;</span>
-                
-                <span title="字数统计">
-                  1,244
-                </span>
-              
-
-              
-                <span class="post-meta-divider">|</span>
-              
-
-              
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-clock-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
-                
-                <span title="阅读时长">
-                  5
-                </span>
-              
-            </div>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>最近公司一项目写完在进行压测，在压测过程中偶然top了几次，发现项目运行的进程占用的资源RES一直在缓慢增长。于是怀疑是存在内存泄漏。</p>
-<p>用通俗的话来讲<strong>内存泄漏</strong>是由于开发人员没有注意到内存管理，没有有效的进行内存回收导致的一部分内存无法被回收，同时在系统运行过程中会不断有新的相关内存占用，最终导致Out of Memory。这种情况在C++ programmer中是非常头疼的一件事，因为C++把内存管理的权限交给了开发人员，但是对于Java开发人员来说会轻松很多，因为JVM自带GC收集器垃圾内存回收一般不需要开发人员关心。那么有人会问了，既然如此Java程序有可能会出现内存泄漏情况吗？答案是肯定的。那么为什么在有GC收集器的情况下还会有内存泄露呢？这还需要搞清楚JVM的垃圾回收的原理–什么样的对象会被认为是垃圾<br>
+          <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>在上篇文章我们分析了EventLoop的两大核心NioEventLoopGroup和NioEventLoop，NioEventLoopGroup在其父类MultithreadEventExecutor中维护了NioEventLoop数组，而NioEventLoop首先内部持有线程对象，所以NioEventLoopGroup是个线程池，并且上篇文章我们也分析了NioEventLoop除了是个单线程，并且也是它执行了I/O的事件循环，没错就是它自己的run方法里面的逻辑，今天我们专门深入到这块事件循环里面，看看Netty是怎么做的。<br>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/04/29/记一次内存泄漏排查/#more" rel="contents">
+            <a class="btn" href="/2019/09/10/Netty4.x源码分析之EventLoop（二）/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1005,7 +432,7 @@ file.delete();
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/14/深入理解dubbo之服务引用源码分析/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/15/Netty4.x源码分析之EventLoop（一）/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="赖峣">
@@ -1024,7 +451,7 @@ file.delete();
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/01/14/深入理解dubbo之服务引用源码分析/" itemprop="url">深入理解dubbo之服务引用源码分析</a></h1>
+                <a class="post-title-link" href="/2019/08/15/Netty4.x源码分析之EventLoop（一）/" itemprop="url">Netty4.x源码分析之EventLoop（一）</a></h1>
         
 
         <div class="post-meta">
@@ -1036,8 +463,8 @@ file.delete();
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-14T22:06:08+08:00">
-                2018-01-14
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-08-15T21:12:42+08:00">
+                2019-08-15
               </time>
             
 
@@ -1054,7 +481,7 @@ file.delete();
 
           
           
-             <span id="/2018/01/14/深入理解dubbo之服务引用源码分析/" class="leancloud_visitors" data-flag-title="深入理解dubbo之服务引用源码分析">
+             <span id="/2019/08/15/Netty4.x源码分析之EventLoop（一）/" class="leancloud_visitors" data-flag-title="Netty4.x源码分析之EventLoop（一）">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -1079,7 +506,7 @@ file.delete();
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  2,646
+                  3,891
                 </span>
               
 
@@ -1095,7 +522,7 @@ file.delete();
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  12
+                  16
                 </span>
               
             </div>
@@ -1117,10 +544,10 @@ file.delete();
 
       
         
-          <p>在之前说了一下dubbo的服务发布过程，其实严格意义上只说了一半吧，只把dubbo如何经过ProxyFactory的代理成一个Invoker，等待客户端调用的过程讲了一遍，而重要的Protocol.export方法略过去了，今天我将连带dubbo的comsumer客户端服务引用和Protocol机制来讲一讲。</p>
+          <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>上篇文章我们分析了ServerBootstrap的启动这部分源码，从整体的角度初步接触了netty的编码设计的魅力，今天我们来分析一下Netty里面另一个核心角色–EventLoop。用过netty的同学应该都或多或少知道Netty的高性能很大一部分功劳都在EventLoop的设计，尤其是EventLoop对Reactor线程模型的实现，大大提升了Netty的并发能力，接下来我们就来揭开EventLoop的神秘面纱<br>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/01/14/深入理解dubbo之服务引用源码分析/#more" rel="contents">
+            <a class="btn" href="/2019/08/15/Netty4.x源码分析之EventLoop（一）/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1171,7 +598,7 @@ file.delete();
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/14/深入理解dubbo之服务发布源码分析/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/23/Netty4.x源码笔记之服务端启动/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="赖峣">
@@ -1190,7 +617,7 @@ file.delete();
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/01/14/深入理解dubbo之服务发布源码分析/" itemprop="url">深入理解dubbo之服务发布源码分析</a></h1>
+                <a class="post-title-link" href="/2019/06/23/Netty4.x源码笔记之服务端启动/" itemprop="url">Netty4.x源码笔记之服务端启动</a></h1>
         
 
         <div class="post-meta">
@@ -1202,8 +629,8 @@ file.delete();
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-14T22:03:43+08:00">
-                2018-01-14
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-23T21:52:42+08:00">
+                2019-06-23
               </time>
             
 
@@ -1220,7 +647,7 @@ file.delete();
 
           
           
-             <span id="/2018/01/14/深入理解dubbo之服务发布源码分析/" class="leancloud_visitors" data-flag-title="深入理解dubbo之服务发布源码分析">
+             <span id="/2019/06/23/Netty4.x源码笔记之服务端启动/" class="leancloud_visitors" data-flag-title="Netty4.x源码笔记之服务端启动">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -1245,7 +672,7 @@ file.delete();
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  2,577
+                  3,756
                 </span>
               
 
@@ -1261,7 +688,7 @@ file.delete();
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  11
+                  17
                 </span>
               
             </div>
@@ -1283,10 +710,343 @@ file.delete();
 
       
         
-          <p>dubbo 是阿里开源的一个分布式服务框架，它的最大特点是按照分层的方式来架构，使各层之间充分解耦，并且它是无侵入性的，dubbo可以无缝与spring整合，更重要的是dubbo还提供了强大的容错和监控功能。 对于业务方来说，dubbo使用上手足够简单，调用过程对业务方透明，对开发人员友好。</p>
+          <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>Netty是由JBOSS提供的一个java开源框架。Netty提供异步的、事件驱动的网络应用程序框架和工具，用以快速开发高性能、高可靠性的网络服务器和客户端程序。因其基于异步的、事件驱动的特性，Netty具有很优异的性能，接下来我会展开一系列的Netty源码的学习，源码分析基于Netty版本V4.1.0。希望自己能有所收获。<br>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/01/14/深入理解dubbo之服务发布源码分析/#more" rel="contents">
+            <a class="btn" href="/2019/06/23/Netty4.x源码笔记之服务端启动/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/29/java基础之ReentrantLock/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="赖峣">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="知之’s Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/04/29/java基础之ReentrantLock/" itemprop="url">java基础之ReentrantLock</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-29T21:52:42+08:00">
+                2019-04-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2019/04/29/java基础之ReentrantLock/" class="leancloud_visitors" data-flag-title="java基础之ReentrantLock">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  3,323
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  14
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>之前我们说了java的synchronized同步关键字，解析了jdk1.6之后对其进行一系列优化原理分析，今天我们聊一聊java中另一个锁ReentrantLock。</p>
+<p>synchronized同步关键字实现同步或者说独占是通过JVM底层进行系统调用操作Mutex Lock（互斥锁）实现的，而ReentrantLock则是通过上层代码实现，某种意义上可以说是锁的软实现（当然还是需要通过调用大量的Unsafe类进行CAS操作，最终还是要调用JVM的native方法）。所以不涉及操作系统层面的系统调用不存在线程切换和内核区和用户区的切换的开销，在jdk1.6之前性能是比synchronized好的。按照惯例，我们先看ReentrantLock怎么用。<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/04/29/java基础之ReentrantLock/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/02/23/java基础之equals方法和hashcode方法/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="赖峣">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="知之’s Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/02/23/java基础之equals方法和hashcode方法/" itemprop="url">java基础之equals方法和hashcode方法</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-02-23T21:52:42+08:00">
+                2019-02-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2019/02/23/java基础之equals方法和hashcode方法/" class="leancloud_visitors" data-flag-title="java基础之equals方法和hashcode方法">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  1,011
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  4
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>java基础系列之前已经剖析过好几个java里面比较关键的关键字了，今天我们来讲讲容易被人忽视的equals方法和hashcode方法。为什么说容易被人忽视，因为这两货就算你理他，也不会出什么问题，java的上帝类Object自带equals方法和hashcode方法，所以不用你操心，然鹅只要你根据业务需求来重写equals方法，就很有可能出错，今天我们就来看看这两个方法。<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/02/23/java基础之equals方法和hashcode方法/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1328,7 +1088,7 @@ file.delete();
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1378,7 +1138,7 @@ file.delete();
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-count">25</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1391,7 +1151,7 @@ file.delete();
               
               <div class="site-state-item site-state-tags">
                 
-                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-count">19</span>
                   <span class="site-state-item-name">标签</span>
                 
               </div>
@@ -1440,7 +1200,7 @@ file.delete();
       <div class="footer-inner">
         
 <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-<div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+<div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
@@ -1454,7 +1214,7 @@ file.delete();
     
       <span class="post-meta-item-text">Site words total count&#58;</span>
     
-    <span title="Site words total count">22.4k</span>
+    <span title="Site words total count">41.0k</span>
   
 </div>
 

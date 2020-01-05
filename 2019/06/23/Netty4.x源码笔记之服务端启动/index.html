@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="JAVA,Netty,NIO," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="引言Netty是由JBOSS提供的一个java开源框架。Netty提供异步的、事件驱动的网络应用程序框架和工具，用以快速开发高性能、高可靠性的网络服务器和客户端程序。因其基于异步的、事件驱动的特性，Netty具有很优异的性能，接下来我会展开一系列的Netty源码的学习，源码分析基于Netty版本V4.1.0。希望自己能有所收获。">
+<meta name="keywords" content="JAVA,Netty,NIO">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Netty4.x源码笔记之服务端启动">
+<meta property="og:url" content="http://yoursite.com/2019/06/23/Netty4.x源码笔记之服务端启动/index.html">
+<meta property="og:site_name" content="知之’s Blog">
+<meta property="og:description" content="引言Netty是由JBOSS提供的一个java开源框架。Netty提供异步的、事件驱动的网络应用程序框架和工具，用以快速开发高性能、高可靠性的网络服务器和客户端程序。因其基于异步的、事件驱动的特性，Netty具有很优异的性能，接下来我会展开一系列的Netty源码的学习，源码分析基于Netty版本V4.1.0。希望自己能有所收获。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-01-05T03:11:39.284Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Netty4.x源码笔记之服务端启动">
+<meta name="twitter:description" content="引言Netty是由JBOSS提供的一个java开源框架。Netty提供异步的、事件驱动的网络应用程序框架和工具，用以快速开发高性能、高可靠性的网络服务器和客户端程序。因其基于异步的、事件驱动的特性，Netty具有很优异的性能，接下来我会展开一系列的Netty源码的学习，源码分析基于Netty版本V4.1.0。希望自己能有所收获。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/06/23/Netty4.x源码笔记之服务端启动/"/>
+
+
+
+
+
+  <title>Netty4.x源码笔记之服务端启动 | 知之’s Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">知之’s Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">to be a better man</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/23/Netty4.x源码笔记之服务端启动/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="赖峣">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="知之’s Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Netty4.x源码笔记之服务端启动</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-06-23T21:52:42+08:00">
+                2019-06-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2019/06/23/Netty4.x源码笔记之服务端启动/" class="leancloud_visitors" data-flag-title="Netty4.x源码笔记之服务端启动">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  3,756
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  17
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>Netty是由JBOSS提供的一个java开源框架。Netty提供异步的、事件驱动的网络应用程序框架和工具，用以快速开发高性能、高可靠性的网络服务器和客户端程序。因其基于异步的、事件驱动的特性，Netty具有很优异的性能，接下来我会展开一系列的Netty源码的学习，源码分析基于Netty版本V4.1.0。希望自己能有所收获。<br><a id="more"></a></p>
+<h3 id="服务端启动示例"><a href="#服务端启动示例" class="headerlink" title="服务端启动示例"></a>服务端启动示例</h3><p>在分析学习之前我们先按照国际惯例，我们先看看Netty服务端是怎么启动的:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ServerBootstrap bootStrap = new ServerBootstrap();</span><br><span class="line">		bootStrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)</span><br><span class="line">		        .option(ChannelOption.SO_BACKLOG, 1024)</span><br><span class="line">				.childHandler(MockChannelInitializer);</span><br><span class="line">				</span><br><span class="line">	    bootStrap.bind(port).sync();</span><br></pre></td></tr></table></figure></p>
+<p>首先需要先创建ServerBootstrap，设置双线程组（boss线程组和worker线程组，Netty的Reactor线程模型），配置好网络处理的属性如SO_BACKLOG（正在与客户端进行三次握手的队列，分两个队列，客户端调用connect给服务端发送syn包，进行第一次握手，服务端收到syn包返回一个shn包和ack标志进行第二次握手时，放进一个握手初始队列，当服务端接收到客户端返回的ack包时，tcp内核会将连接从握手初始队列转到新的队列中，最后在应用程序accept完成后从新队列中取出，如果SO_BACKLOG太小，accept线程处理不过来，服务端会拒绝新的连接）。最后绑定端口就ok了。值得一提的是Netty使用调用链的方式进行设值(主要是因为参数较多，类结构较为复杂，采用建造器模式)，比较符合本人的胃口，手动滑稽。</p>
+<h3 id="channel创建与初始化"><a href="#channel创建与初始化" class="headerlink" title="channel创建与初始化"></a>channel创建与初始化</h3><p>看完服务端启动示例，我们进入正题，开始分析源码。我们先直接看<code>bootStrap.bind(port)</code>方法。bind方法调用链如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ServerBootstrap.bind -&gt; AbstractBootstrap.bind -&gt; AbstractBootstrap.doBind</span><br></pre></td></tr></table></figure></p>
+<p>经过层层嵌套调用，参数校验后最终调用了关键的<code>AbstractBootstrap.doBind</code>方法，该方法做了两件事情，第一，初始化NioServerSocketChannel实例和异步把channel注册到selector上；第二在注册成功后进行绑定端口。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">private ChannelFuture doBind(final SocketAddress localAddress) &#123;</span><br><span class="line">        final ChannelFuture regFuture = initAndRegister();</span><br><span class="line">        final Channel channel = regFuture.channel();</span><br><span class="line">        if (regFuture.cause() != null) &#123;</span><br><span class="line">            return regFuture;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (regFuture.isDone()) &#123;</span><br><span class="line">            // At this point we know that the registration was complete and successful.</span><br><span class="line">            ChannelPromise promise = channel.newPromise();</span><br><span class="line">            doBind0(regFuture, channel, localAddress, promise);</span><br><span class="line">            return promise;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            // Registration future is almost always fulfilled already, but just in case it&apos;s not.</span><br><span class="line">            final PendingRegistrationPromise promise = new PendingRegistrationPromise(channel);</span><br><span class="line">            regFuture.addListener(new ChannelFutureListener() &#123;</span><br><span class="line">                @Override</span><br><span class="line">                public void operationComplete(ChannelFuture future) throws Exception &#123;</span><br><span class="line">                    Throwable cause = future.cause();</span><br><span class="line">                    if (cause != null) &#123;</span><br><span class="line">                        // Registration on the EventLoop failed so fail the ChannelPromise directly to not cause an</span><br><span class="line">                        // IllegalStateException once we try to access the EventLoop of the Channel.</span><br><span class="line">                        promise.setFailure(cause);</span><br><span class="line">                    &#125; else &#123;</span><br><span class="line">                        // Registration was successful, so set the correct executor to use.</span><br><span class="line">                        // See https://github.com/netty/netty/issues/2586</span><br><span class="line">                        promise.registered();</span><br><span class="line"></span><br><span class="line">                        doBind0(regFuture, channel, localAddress, promise);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            return promise;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们进入这个initAndRegister方法看看具体实现。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">final ChannelFuture initAndRegister() &#123;</span><br><span class="line">        //这个channelFactory实际是ReflectiveChannelFactory实例，该实例封装了NioServerChannel，调用newChannel()方法是通过反射拿到NioServerChannel实例</span><br><span class="line">        final Channel channel = channelFactory.newChannel();</span><br><span class="line">        try &#123;</span><br><span class="line">            init(channel);</span><br><span class="line">        &#125; catch (Throwable t) &#123;</span><br><span class="line">            channel.unsafe().closeForcibly();</span><br><span class="line">            // as the Channel is not registered yet we need to force the usage of the GlobalEventExecutor</span><br><span class="line">            return new DefaultChannelPromise(channel, GlobalEventExecutor.INSTANCE).setFailure(t);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        ChannelFuture regFuture = group().register(channel);</span><br><span class="line">        if (regFuture.cause() != null) &#123;</span><br><span class="line">            if (channel.isRegistered()) &#123;</span><br><span class="line">                channel.close();</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                channel.unsafe().closeForcibly();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return regFuture;</span><br></pre></td></tr></table></figure></p>
+<p>上面的<code>initAndRegister()</code>方法调用了ReflectiveChannelFactory的newChannel方法，使用反射创建了NioServerSocketChannel实例（还记得在创建ServerBootstrap的时候channel(NioServerSocketChannel.class)么，是他是他就是他），NioServerChannel的构造函数比较关键，我们先来看看NioServerChannel创建实例的过程。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">public NioServerSocketChannel() &#123;</span><br><span class="line">        this(newSocket(DEFAULT_SELECTOR_PROVIDER));</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    public NioServerSocketChannel(ServerSocketChannel channel) &#123;</span><br><span class="line">        super(null, channel, SelectionKey.OP_ACCEPT);</span><br><span class="line">        config = new NioServerSocketChannelConfig(this, javaChannel().socket());</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    private static ServerSocketChannel newSocket(SelectorProvider provider) &#123;</span><br><span class="line">        //忽略无关代码</span><br><span class="line">            return provider.openServerSocketChannel();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过channelFactory反射创建channel实例使用的是无参构造方法，而这个构造函数先通过newSocket方法创建java原生的ServerSocketChannel<br>实例，然后调用父类AbstractNioMessageChannel构造函数，值得注意的是这里把OP_ACCEPT的操作位传给了父类，而最终在祖父类AbstractNioChannel中设置了readInterestOp参数，同时把channel设置成非阻塞的。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) &#123;</span><br><span class="line">        super(parent);</span><br><span class="line">        this.ch = ch;</span><br><span class="line">        this.readInterestOp = readInterestOp;</span><br><span class="line">        try &#123;</span><br><span class="line">            ch.configureBlocking(false);</span><br><span class="line">        &#125; catch (IOException e) &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                ch.close();</span><br><span class="line">            &#125; catch (IOException e2) &#123;</span><br><span class="line">                if (logger.isWarnEnabled()) &#123;</span><br><span class="line">                    logger.warn(</span><br><span class="line">                            &quot;Failed to close a partially initialized socket.&quot;, e2);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            throw new ChannelException(&quot;Failed to enter non-blocking mode.&quot;, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>在调用完父类的构造函数后NioServerSocketChannel还做了一件事，创建ChannelConfig实例，该实例是每个channel一些参数配置，比如高低水位设置，连接超时参数设置等，这个参数配置在下面channel初始化的时候会再见面的。到这NioServerSocketChannel的实例化已完成。</p>
+<p>最后我们回到AbstractBootstrap的initAndRegister()方法，再看看实例化过后的channel初始化过程。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">    void init(Channel channel) throws Exception &#123;</span><br><span class="line">        //第一步，加载用户自定义的tcp服务端的options参数，比如上面提到的SO_BACKLOG，该参数关注的是有连接建立的时候情况，只在server端有</span><br><span class="line">        final Map&lt;ChannelOption&lt;?&gt;, Object&gt; options = options0();</span><br><span class="line">        synchronized (options) &#123;</span><br><span class="line">          </span><br><span class="line">           channel.config().setOptions(options);</span><br><span class="line">        &#125;</span><br><span class="line">        //第二步，加载用户自定义的attrs属性，初始化channel就设定的，一般是全局属性</span><br><span class="line">        final Map&lt;AttributeKey&lt;?&gt;, Object&gt; attrs = attrs0();</span><br><span class="line">        synchronized (attrs) &#123;</span><br><span class="line">            for (Entry&lt;AttributeKey&lt;?&gt;, Object&gt; e: attrs.entrySet()) &#123;</span><br><span class="line">                @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">                AttributeKey&lt;Object&gt; key = (AttributeKey&lt;Object&gt;) e.getKey();</span><br><span class="line">                channel.attr(key).set(e.getValue());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        //拿到ChannelPipeline</span><br><span class="line">        ChannelPipeline p = channel.pipeline();</span><br><span class="line">        //第四步，拿到childOptions和childAttrs，这里的childOptions是设置接收客户端连接的参数的，比如连接超时，与发送客户端数据buffer的高低水位等，而childAttrs则一般为与客户端相关的参数，比如通过channel识别用户的一些数据可以维护到这里，childAttrs是线程安全的。childOptions关注的是channel accept之后的事情。</span><br><span class="line">        final EventLoopGroup currentChildGroup = childGroup;</span><br><span class="line">        final ChannelHandler currentChildHandler = childHandler;</span><br><span class="line">        final Entry&lt;ChannelOption&lt;?&gt;, Object&gt;[] currentChildOptions;</span><br><span class="line">        final Entry&lt;AttributeKey&lt;?&gt;, Object&gt;[] currentChildAttrs;</span><br><span class="line">        synchronized (childOptions) &#123;</span><br><span class="line">            currentChildOptions = childOptions.entrySet().toArray(newOptionArray(childOptions.size()));</span><br><span class="line">        &#125;</span><br><span class="line">        synchronized (childAttrs) &#123;</span><br><span class="line">            currentChildAttrs = childAttrs.entrySet().toArray(newAttrArray(childAttrs.size()));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        p.addLast(new ChannelInitializer&lt;Channel&gt;() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void initChannel(Channel ch) throws Exception &#123;</span><br><span class="line">                ChannelPipeline pipeline = ch.pipeline();</span><br><span class="line">                ChannelHandler handler = config.handler();</span><br><span class="line">                if (handler != null) &#123;</span><br><span class="line">                    pipeline.addLast(handler);</span><br><span class="line">                &#125;</span><br><span class="line">                pipeline.addLast(new ServerBootstrapAcceptor(</span><br><span class="line">                        currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>channel的初始化就是把服务端配置和接入客户端的配置的上下文属性设置到channel中，也就是把上下文参数设置到上面我们说到过的ChannelConfig实例上。细节在这就不说了，有兴趣的可以查看源码，具体链路如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AbstractBootstrap.init -&gt; ServerBootstrap.init -&gt; AbstractBootstrap.setChannelOption -&gt; NioServerSocketChannel.NioServerSocketChannelConfig.setOption</span><br></pre></td></tr></table></figure></p>
+<p>到这channel的实例化和初始化就讲完了，总结下来就是以下几点：</p>
+<ol>
+<li>ServerBootstrap.channel()绑定NioServerSocketChannel类型</li>
+<li>调用AbstractBootstrap.doBind方法</li>
+<li>使用反射把绑定的NioServerSocketChannel实例化</li>
+<li>实例化创建java原生ServerSocketChannel实例</li>
+<li>调用NioServerSocketChannel父类构造函数，设置readInterestOp为OP_ACCEPT(16)操作位，并把channel设置为非阻塞模式。</li>
+<li>实例化ChannelConfig。</li>
+<li>初始化channelConfig的各tcp连接option参数和channel的Attribute参数，添加Netty内部的channelHandler。</li>
+</ol>
+<h3 id="Channel注册"><a href="#Channel注册" class="headerlink" title="Channel注册"></a>Channel注册</h3><p>在初始化完成之后，就开始了真正的注册，让我们回到initAndRegister()方法中看看注册过程,initAndRegister()方法拿到NioEventLoopGroup，也就是前面初始化ServerBootstrap的boss线程（accept线程），从group中拿出一个线程执行注册任务，去掉层层嵌套，真正注册的是register0方法。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">private void register0(ChannelPromise promise) &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                // check if the channel is still open as it could be closed in the mean time when the register</span><br><span class="line">                // call was outside of the eventLoop</span><br><span class="line">                if (!promise.setUncancellable() || !ensureOpen(promise)) &#123;</span><br><span class="line">                    return;</span><br><span class="line">                &#125;</span><br><span class="line">                boolean firstRegistration = neverRegistered;</span><br><span class="line">                doRegister();</span><br><span class="line">                neverRegistered = false;</span><br><span class="line">                registered = true;</span><br><span class="line"></span><br><span class="line">                safeSetSuccess(promise);</span><br><span class="line">                pipeline.fireChannelRegistered();</span><br><span class="line">                // Only fire a channelActive if the channel has never been registered. This prevents firing</span><br><span class="line">                // multiple channel actives if the channel is deregistered and re-registered.</span><br><span class="line">                if (isActive()) &#123;</span><br><span class="line">                    if (firstRegistration) &#123;</span><br><span class="line">                        pipeline.fireChannelActive();</span><br><span class="line">                    &#125; else if (config().isAutoRead()) &#123;</span><br><span class="line">                        // This channel was registered before and autoRead() is set. This means we need to begin read</span><br><span class="line">                        // again so that we process inbound data.</span><br><span class="line">                        //</span><br><span class="line">                        // See https://github.com/netty/netty/issues/4805</span><br><span class="line">                        beginRead();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; catch (Throwable t) &#123;</span><br><span class="line">                // Close the channel directly to avoid FD leak.</span><br><span class="line">                closeForcibly();</span><br><span class="line">                closeFuture.setClosed();</span><br><span class="line">                safeSetFailure(promise, t);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure></p>
+<p>register0方法首先判断调用register0的promise任务是否还在注册进行中就被取消了，接下来调用doRegister()方法，该方法实现就是调用了java原生的注册方法，将channel往selector上面注册。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">    protected void doRegister() throws Exception &#123;</span><br><span class="line">        boolean selected = false;</span><br><span class="line">        for (;;) &#123;</span><br><span class="line">            try &#123;</span><br><span class="line">                selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);</span><br><span class="line">                return;</span><br><span class="line">            &#125; catch (CancelledKeyException e) &#123;</span><br><span class="line">                if (!selected) &#123;</span><br><span class="line">                    // Force the Selector to select now as the &quot;canceled&quot; SelectionKey may still be</span><br><span class="line">                    // cached and not removed because no Select.select(..) operation was called yet.</span><br><span class="line">                    eventLoop().selectNow();</span><br><span class="line">                    selected = true;</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    // We forced a select operation on the selector before but the SelectionKey is still cached</span><br><span class="line">                    // for whatever reason. JDK bug ?</span><br><span class="line">                    throw e;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>上面javaChannel()方法就是拿到了java原生的SelectableChannel。通过调用该channel的register方法，来把该channel注册到与eventLoop绑定的selector上面。值得注意的是这里面的设置监听的操作位应该是OP_ACCEPT(16)的，监听accept事件的，而这里却是个0。只是注册一下，什么都不做。其实这里设置0只注册而不监听事件的原因是该类<code>AbstractNioChannel</code>是个公用的类，服务端NioServerSocketChannel和客户端NioSocketChannel都是用这个抽象的channel，而真正的感兴趣的事件在初始化NioServerSocketChannel和NioSocketChannel设定了，因为selectKey可以使用interestOps方法方便设置。还记得我们刚刚看NioSocketChannel实例化设置了readInterestOp为OP_ACCEPT了么？</p>
+<p>注册完成后往pipeline触发channelRegistered的事件，该事件只在inboundHandler中传播。最后再判断channel是否active了，如果active了再触发channelActive事件。最后再看看AbstractNioChannel这个门面类，该类代理的各种java原生API,比如初始化selector等。</p>
+<h3 id="地址绑定"><a href="#地址绑定" class="headerlink" title="地址绑定"></a>地址绑定</h3><p>在把channel注册到NioEventLoop上的selector之后，最后我们再倒回来看看bind0()方法，这个方法除了绑定本地地址和端口，最重要的方法就把上面的只注册了0的操作位给修正为真正OP_ACCEPT(16)到selectionKey上。请看下面的代码。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">private static void doBind0(</span><br><span class="line">            final ChannelFuture regFuture, final Channel channel,</span><br><span class="line">            final SocketAddress localAddress, final ChannelPromise promise) &#123;</span><br><span class="line"></span><br><span class="line">        // This method is invoked before channelRegistered() is triggered.  Give user handlers a chance to set up</span><br><span class="line">        // the pipeline in its channelRegistered() implementation.</span><br><span class="line">        channel.eventLoop().execute(new Runnable() &#123;</span><br><span class="line">            @Override</span><br><span class="line">            public void run() &#123;</span><br><span class="line">                if (regFuture.isSuccess()) &#123;</span><br><span class="line">                    channel.bind(localAddress, promise).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    promise.setFailure(regFuture.cause());</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到doBind0方法是将bind的功能封装成一个任务提交到了accept线程池中，经过层层嵌套最终是ChannelPipeline的头结点head调用了unsafe.bind()方法，调用链路如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AbstractChannel#bind(xxx)-&gt;DefaultChannelPipeline#bind(xx)-&gt;tail.bind(xxx)-&gt;tail.invokeBind(xxx)-&gt;head.bind(xxx)-&gt;unsafe.bind(xxx))</span><br></pre></td></tr></table></figure></p>
+<p>关于Pipeline我们可以看成调用链，和servlet的filterChain一样使用责任链模式在事件触发后事件在pipeline中流转，pipeline我们在源码分析其他文章中再细聊，这里不是我们关注的重点，这里我们的重点是这个unsafe对象。我们看看这个unsafe对象。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">interface Unsafe &#123;</span><br><span class="line"></span><br><span class="line">        RecvByteBufAllocator.Handle recvBufAllocHandle();</span><br><span class="line"></span><br><span class="line">        SocketAddress localAddress();</span><br><span class="line"></span><br><span class="line">        SocketAddress remoteAddress();</span><br><span class="line"></span><br><span class="line">        void register(EventLoop eventLoop, ChannelPromise promise);</span><br><span class="line"></span><br><span class="line">        void bind(SocketAddress localAddress, ChannelPromise promise);</span><br><span class="line"></span><br><span class="line">        void connect(SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise);</span><br><span class="line"></span><br><span class="line">        void disconnect(ChannelPromise promise);</span><br><span class="line"></span><br><span class="line">        void close(ChannelPromise promise);</span><br><span class="line"></span><br><span class="line">        void closeForcibly();</span><br><span class="line"></span><br><span class="line">        void deregister(ChannelPromise promise);</span><br><span class="line"></span><br><span class="line">        void beginRead();</span><br><span class="line"></span><br><span class="line">        void write(Object msg, ChannelPromise promise);</span><br><span class="line"></span><br><span class="line">        void flush();</span><br><span class="line">        </span><br><span class="line">        ChannelPromise voidPromise();</span><br><span class="line"></span><br><span class="line">        ChannelOutboundBuffer outboundBuffer();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>unsafe对象是个接口，具体实现有两个：AbstractNioMessageChannel.NioMessageUnsafe和AbstractNioByteChannel.NioByteUnsafe，分别对应NioServerSocketChannel和NioSocketChannel。看接口定义我们大概就知道unsafe类是用来封装java底层的通信方法，使用unsafe实现类作为代理类代理底层java通信实现。现在我们来看下这个unsafe.bind方法。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">public final void bind(final SocketAddress localAddress, final ChannelPromise promise) &#123;</span><br><span class="line">            assertEventLoop();</span><br><span class="line"></span><br><span class="line">            if (!promise.setUncancellable() || !ensureOpen(promise)) &#123;</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            // See: https://github.com/netty/netty/issues/576</span><br><span class="line">            if (Boolean.TRUE.equals(config().getOption(ChannelOption.SO_BROADCAST)) &amp;&amp;</span><br><span class="line">                localAddress instanceof InetSocketAddress &amp;&amp;</span><br><span class="line">                !((InetSocketAddress) localAddress).getAddress().isAnyLocalAddress() &amp;&amp;</span><br><span class="line">                !PlatformDependent.isWindows() &amp;&amp; !PlatformDependent.maybeSuperUser()) &#123;</span><br><span class="line">                // Warn a user about the fact that a non-root user can&apos;t receive a</span><br><span class="line">                // broadcast packet on *nix if the socket is bound on non-wildcard address.</span><br><span class="line">                logger.warn(</span><br><span class="line">                        &quot;A non-root user can&apos;t receive a broadcast packet if the socket &quot; +</span><br><span class="line">                        &quot;is not bound to a wildcard address; binding to a non-wildcard &quot; +</span><br><span class="line">                        &quot;address (&quot; + localAddress + &quot;) anyway as requested.&quot;);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            boolean wasActive = isActive();</span><br><span class="line">            try &#123;</span><br><span class="line">                doBind(localAddress);</span><br><span class="line">            &#125; catch (Throwable t) &#123;</span><br><span class="line">                safeSetFailure(promise, t);</span><br><span class="line">                closeIfClosed();</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            if (!wasActive &amp;&amp; isActive()) &#123;</span><br><span class="line">                invokeLater(new Runnable() &#123;</span><br><span class="line">                    @Override</span><br><span class="line">                    public void run() &#123;</span><br><span class="line">                        pipeline.fireChannelActive();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            safeSetSuccess(promise);</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到第一件事就是调用java原生的bind方法绑定地址和接口然后channel被激活，激活之后立马调用<code>pipleline.fireChannelActive()</code>方法，事件在pipleline中流转。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">   public final ChannelPipeline fireChannelActive() &#123;</span><br><span class="line">       AbstractChannelHandlerContext.invokeChannelActive(head);</span><br><span class="line">       return this;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+<p>事件最先在头结点获取，而头结点获取到channelActive事件后做了两件事，先把事件传递下去，然后调用readIfIsAutoRead()方法，而该方法先会判断channel.config().isAutoRead()，如果true那么调用AbstractChannel的read方法。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public void channelActive(ChannelHandlerContext ctx) throws Exception &#123;</span><br><span class="line">    ctx.fireChannelActive();</span><br><span class="line"></span><br><span class="line">    readIfIsAutoRead();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private void readIfIsAutoRead() &#123;</span><br><span class="line">    if (channel.config().isAutoRead()) &#123;</span><br><span class="line">        channel.read();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这个config()其实就是在初始化NioServerSocketChannel的时候初始化的。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public NioServerSocketChannel(ServerSocketChannel channel) &#123;</span><br><span class="line">        super(null, channel, SelectionKey.OP_ACCEPT);</span><br><span class="line">        config = new NioServerSocketChannelConfig(this, javaChannel().socket());</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>就是这个NioServerSocketChannelConfig。回到isAutoRead()方法<code>public boolean isAutoRead() {
+        return autoRead == 1;
+    }</code>就这个方法判断的，而autoRead是全局变量初始化就是1所以一定是true。所以AbstractChannel的read方法一定会调用。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">    public Channel read() &#123;</span><br><span class="line">        pipeline.read();</span><br><span class="line">        return this;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>看上面的代码，调用pipeline.read()方法，所以read()方法又经过层层调用（tail.invokeRead()-&gt;head.read()-&gt;unsafe.beginRead()），来到unsafe.beginRead()方法，而这个beginRead()是会修改selectionKey的interestOps的也就是在初始化NioServerSocketChannel的时候设置的SO_ACCEPT(16)。到这就完成了服务端的accept过程，只要有客户端连接进来，selector就能够select进来。这部分我们在讲EventLoopGroup的时候细讲。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">protected void doBeginRead() throws Exception &#123;</span><br><span class="line">    // Channel.read() or ChannelHandlerContext.read() was called</span><br><span class="line">    final SelectionKey selectionKey = this.selectionKey;</span><br><span class="line">    if (!selectionKey.isValid()) &#123;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    readPending = true;</span><br><span class="line"></span><br><span class="line">    final int interestOps = selectionKey.interestOps();</span><br><span class="line">    if ((interestOps &amp; readInterestOp) == 0) &#123;</span><br><span class="line">        selectionKey.interestOps(interestOps | readInterestOp);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>到这里netty的服务端启动源码分析就结束了。总结一下就是以下几点:</p>
+<ol>
+<li>实例化ServerBootstrap对象，设置具体的NioServerSocketChannel.class类。</li>
+<li>调用initAndRegister方法初始化NioServerSocketChannel实例，在初始化Channel实例时拿到了java原生的ServerSocketChannel实例，并且实例化ChannelConfig，最后将channel设置为非阻塞模式，把readInterestOp属性设为OP_ACCEPT操作位。</li>
+<li>实例化NioServerSocketChannel时调用父类构造函数，生成channel唯一id，实例化unsafe对象这个java底层通信的代理类，实例化Pipeline。</li>
+<li>实例化过后根据用户设置的options和childOptions参数设置到ChannelConfig中。</li>
+<li>把channel注册到NioEventLoop上</li>
+<li>把channel注册到与NioEventLoop绑定的Selector上</li>
+<li>绑定本地ip和端口触发channelActive事件，调用unsafe.doBeginRead方法把selectionKey监听的操作位修改为OP_ACCEPT操作位。开始accept客户端的连接。</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JAVA-Netty-NIO/" rel="tag"># JAVA,Netty,NIO</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/29/java基础之ReentrantLock/" rel="next" title="java基础之ReentrantLock">
+                <i class="fa fa-chevron-left"></i> java基础之ReentrantLock
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/15/Netty4.x源码分析之EventLoop（一）/" rel="prev" title="Netty4.x源码分析之EventLoop（一）">
+                Netty4.x源码分析之EventLoop（一） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="赖峣" />
+            
+              <p class="site-author-name" itemprop="name">赖峣</p>
+              <p class="site-description motion-element" itemprop="description">聊技术，讲生活，发现技术生活的美好</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="http://blog.csdn.net/nethackatschool" target="_blank" title="CSDN">
+                      
+                        <i class="fa fa-fw fa-CSDN"></i>CSDN</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#引言"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#服务端启动示例"><span class="nav-number">2.</span> <span class="nav-text">服务端启动示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#channel创建与初始化"><span class="nav-number">3.</span> <span class="nav-text">channel创建与初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Channel注册"><span class="nav-number">4.</span> <span class="nav-text">Channel注册</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#地址绑定"><span class="nav-number">5.</span> <span class="nav-text">地址绑定</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">赖峣</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">41.0k</span>
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+<div>
+<span id="busuanzi_container_site_pv">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+</span>
+
+<span id="busuanzi_container_site_uv" style="margin-right:1%">
+  本站访客数<span id="busuanzi_value_site_uv"></span>人次
+</span>
+</div>
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+<!-- custom analytics part create by xiamo -->
+<script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+<script>AV.initialize("SLERFol0ItknNYCveOdbh9VW-gzGzoHsz", "46swuV0BBuclEmnmFDFS4kdT");</script>
+<script>
+function showTime(Counter) {
+  var query = new AV.Query(Counter);
+  $(".leancloud_visitors").each(function() {
+    var url = $(this).attr("id").trim();
+    query.equalTo("url", url);
+    query.find({
+      success: function(results) {
+        if (results.length == 0) {
+          var content = '0 ' + $(document.getElementById(url)).text();
+          $(document.getElementById(url)).text(content);
+          return;
+        }
+        for (var i = 0; i < results.length; i++) {
+          var object = results[i];
+          var content = object.get('time') + ' ' + $(document.getElementById(url)).text();
+          $(document.getElementById(url)).text(content);
+        }
+      },
+      error: function(object, error) {
+        console.log("Error: " + error.code + " " + error.message);
+      }
+    });
+
+  });
+}
+
+function addCount(Counter) {
+  var Counter = AV.Object.extend("Counter");
+  url = $(".leancloud_visitors").attr('id').trim();
+  title = $(".leancloud_visitors").attr('data-flag-title').trim();
+  var query = new AV.Query(Counter);
+  query.equalTo("url", url);
+  query.find({
+    success: function(results) {
+      if (results.length > 0) {
+        var counter = results[0];
+        counter.fetchWhenSave(true);
+        counter.increment("time");
+        counter.save(null, {
+          success: function(counter) {
+            var content =  counter.get('time') + ' ' + $(document.getElementById(url)).text();
+            $(document.getElementById(url)).text(content);
+          },
+          error: function(counter, error) {
+            console.log('Failed to save Visitor num, with error message: ' + error.message);
+          }
+        });
+      } else {
+        var newcounter = new Counter();
+        newcounter.set("title", title);
+        newcounter.set("url", url);
+        newcounter.set("time", 1);
+        newcounter.save(null, {
+          success: function(newcounter) {
+              console.log("newcounter.get('time')="+newcounter.get('time'));
+            var content = newcounter.get('time') + ' ' + $(document.getElementById(url)).text();
+            $(document.getElementById(url)).text(content);
+          },
+          error: function(newcounter, error) {
+            console.log('Failed to create');
+          }
+        });
+      }
+    },
+    error: function(error) {
+      console.log('Error:' + error.code + " " + error.message);
+    }
+  });
+}
+$(function() {
+  var Counter = AV.Object.extend("Counter");
+  if ($('.leancloud_visitors').length == 1) {
+    addCount(Counter);
+  } else if ($('.post-title-link').length > 1) {
+    showTime(Counter);
+  }
+}); 
+</script>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("SLERFol0ItknNYCveOdbh9VW-gzGzoHsz", "46swuV0BBuclEmnmFDFS4kdT");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
